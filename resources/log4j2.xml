@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="warn" name="AclusterllcJava" packages="aclusterllc.aclusterllcJava">
+
+  <Appenders>
+    <RollingFile name="CommonLogger" fileName="logs\\CommonLogger.log"
+                 filePattern="logs\\$${date:yyyy-MM}\\CommonLogger-%d{MM-dd-yyyy}-%i.log.gz">
+      <PatternLayout>
+        <Pattern>%d{yyyy-MM-dd HH:mm:ss:SSS} [%-5p] %c{1}:%L - %m%n</Pattern>
+      </PatternLayout>
+      <Policies>
+        <TimeBasedTriggeringPolicy />
+        <SizeBasedTriggeringPolicy size="10 MB"/>
+      </Policies>
+      <DefaultRolloverStrategy max="100"/>
+    </RollingFile>
+  </Appenders>
+  <Loggers>
+    <Root level="info">
+      <AppenderRef ref="CommonLogger"/>
+    </Root>
+  </Loggers>
+</Configuration>
