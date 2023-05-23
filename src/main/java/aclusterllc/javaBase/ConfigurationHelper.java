@@ -17,10 +17,6 @@ public class ConfigurationHelper {
      //loading file config
         try {
             configIni.load(new FileInputStream("./resources/config.ini"));
-            for (Map.Entry<Object, Object> entry : configIni.entrySet()) {
-                System.out.println(entry.getKey()+"--"+entry.getValue());
-
-            }
         }
         catch (IOException e)
         {
@@ -29,15 +25,3 @@ public class ConfigurationHelper {
         }
     }
 }
-//
-// try{
-//         Properties p = new Properties();
-//         p.load(new FileInputStream("user.props"));
-//         System.out.println("user = " + p.getProperty("DBuser"));
-//         System.out.println("password = " + p.getProperty("DBpassword"));
-//         System.out.println("location = " + p.getProperty("DBlocation"));
-//         p.list(System.out);
-//         }
-//         catch (Exception e) {
-//         System.out.println(e);
-//         }
