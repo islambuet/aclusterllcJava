@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.*;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
@@ -20,6 +21,8 @@ public class ConfigurationHelper {
     public static final JSONObject dbBasicInfo = new JSONObject();
     public static final JSONObject countersCurrentValue = new JSONObject();
     public static final JSONObject motorsCurrentSpeed = new JSONObject();
+    public static final Map<Integer, Integer> apeClientConnectionStatus  = new HashMap<>();
+
 
     public static void loadConfig(){
      //loading file config

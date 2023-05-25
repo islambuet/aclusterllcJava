@@ -15,10 +15,17 @@ public class Main {
 //        System.out.println(jsonObject.get("shaiful"));
 
         ConfigurationHelper.loadConfig();
-        System.out.println(ConfigurationHelper.configIni.getProperty("db_name"));
-        logger.info(ConfigurationHelper.dbBasicInfo.get("boards").toString());
 
+        ApeClientMessageQueueHandler apeClientMessageQueueHandler=new ApeClientMessageQueueHandler();
+        apeClientMessageQueueHandler.start();
         MainGui mainGui = new MainGui();
+
+        JSONObject machines=(JSONObject)ConfigurationHelper.dbBasicInfo.get("machines");
+        for (String key : machines.keySet()) {
+            ApeClient apeClient=new ApeClient((JSONObject) machines.get(key),apeClientMessageQueueHandler);
+            apeClient.start();
+        }
+
         mainGui.startGui();
         System.out.println("Main");
         logger.info("Started");
