@@ -23,6 +23,7 @@ public class Main {
         JSONObject machines=(JSONObject)ConfigurationHelper.dbBasicInfo.get("machines");
         for (String key : machines.keySet()) {
             ApeClient apeClient=new ApeClient((JSONObject) machines.get(key),apeClientMessageQueueHandler);
+            apeClient.addApeMessageObserver(mainGui);
             apeClient.start();
         }
 

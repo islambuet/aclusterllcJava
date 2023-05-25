@@ -1,12 +1,13 @@
 package aclusterllc.javaBase;
 
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.io.IOException;
 
-public class MainGui {
+public class MainGui implements ApeMessageObserver {
     public JTextArea mainTextArea;
     private JButton clearButton;
     private JPanel mainPanel;
@@ -31,5 +32,21 @@ public class MainGui {
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
+    }
+
+    @Override
+    public void processApeMessage(JSONObject jsonMessage) {
+        int messageId=jsonMessage.getInt("messageId");
+        ApeClient apeClient= (ApeClient) jsonMessage.get("object");
+        if(messageId==30){
+            if(apeClient.clientInfo.getInt("machine_id")==1){
+                this.pingLabel.setText("\u26AB");
+            }
+        }
+        else if(messageId==130){
+            if(apeClient.clientInfo.getInt("machine_id")==1){
+                this.pingLabel.setText("");
+            }
+        }
     }
 }

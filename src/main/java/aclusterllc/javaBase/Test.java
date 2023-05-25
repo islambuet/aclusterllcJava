@@ -2,6 +2,10 @@ package aclusterllc.javaBase;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 //import java.sql.Connection;
 //import java.sql.ResultSet;
 //import java.sql.Statement;
@@ -10,9 +14,50 @@ import org.json.JSONObject;
 
 public class Test {
     public static void main(String[] args) {
-        byte x=(byte)127;
+        BlockingQueue<JSONObject> messageBuffer = new LinkedBlockingQueue<JSONObject>();
 
-        System.out.println(x&255);
+        for(int i=5;i<10;i++){
+            JSONObject jsonObject=new JSONObject();
+            jsonObject.put("messageId",i);
+            try {
+                messageBuffer.put(jsonObject);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+
+
+        // remove elements from the queue
+        // and follow this process again and again
+        // until the queue becomes empty
+        while (messageBuffer.size() != 0) {
+
+            // Remove Employee item from BlockingQueue
+            // using take()
+            try {
+                JSONObject jsonObject3 = messageBuffer.take();
+                System.out.println(jsonObject3);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
+            // print removedItem
+
+            int size = messageBuffer.size();
+
+            // print remaining capacity value
+            System.out.println("\nSize of list :" + size + "\n");
+        }
+    }
+    public static void main1(String[] args) {
+        JSONObject jsonObject=new JSONObject();
+        jsonObject.put("object","shiafl");
+        byte[] bodyBytes = null;
+        jsonObject.put("bodyBytes",bodyBytes);
+
+        System.out.println(jsonObject.get("bodyBytes"));
+
         //System.out.println((byte)130);
     }
 }

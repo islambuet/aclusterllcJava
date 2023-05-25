@@ -30,7 +30,8 @@ public class ApeClient implements Runnable {
 	private final long reconnectThreadDelayMillis = 5000;
 	ByteBuffer buffer = ByteBuffer.allocate(10240000);
 	private int pingCounter = 0;
-	private final long pingDelayMillis = 5000;
+	private final long pingDelayMillis = 2500;
+	private final List<ApeMessageObserver> apeMessageObservers = new ArrayList<>();
 
 	public ApeClient(JSONObject clientInfo, ApeClientMessageQueueHandler apeClientMessageQueueHandler) {
 		this.clientInfo=clientInfo;
@@ -62,9 +63,16 @@ public class ApeClient implements Runnable {
 				if(pingCounter < 3) {
 					//Send syncMessage MSG_ID = 130
 					sendBytes(new byte[]{0, 0, 0, (byte) 130, 0, 0, 0, 8});
+
 					pingCounter++;
 					//send Text editor notification
 					try {
+						sleep(pingDelayMillis);
+						JSONObject jsonObject=new JSONObject();
+						jsonObject.put("messageId",130);
+						jsonObject.put("messageLength",8);
+						jsonObject.put("object",this);
+						notifyToApeMessageObservers(jsonObject);
 						sleep(pingDelayMillis);
 					}
 					catch (InterruptedException e) {
@@ -186,12 +194,12 @@ public class ApeClient implements Runnable {
 	}
 
 	public void processReceivedDataFromAPe(byte[] b){
-		JSONObject jsonObject=new JSONObject();
-		jsonObject.put("object",this);
 		while (b.length>7){
+			JSONObject jsonObject=new JSONObject();
+			jsonObject.put("object",this);
 			int messageId = CommonHelper.bytesToInt(Arrays.copyOfRange(b, 0, 4));
 			int messageLength = CommonHelper.bytesToInt(Arrays.copyOfRange(b, 4, 8));
-			//System.out.println(messageId+" "+messageLength+" "+b.length);
+
 			byte[] bodyBytes = null;
 			if(messageLength>(b.length)){
 				System.out.println("Invalid data length");
@@ -199,16 +207,34 @@ public class ApeClient implements Runnable {
 			}
 			if(messageLength > 8) {
 				bodyBytes = Arrays.copyOfRange(b, 8, messageLength);
+				jsonObject.put("bodyBytes",bodyBytes);
 			}
 			jsonObject.put("messageId",messageId);
-			jsonObject.put("bodyBytes",bodyBytes);
+			jsonObject.put("messageLength",messageLength);
+
 			apeClientMessageQueueHandler.addMessageToBuffer(jsonObject);
 			b= Arrays.copyOfRange(b, messageLength, b.length);
 		}
 	}
-
-	public void processMessage(JSONObject jsonObject) {
-		//logger.info("Message to process.");
+	public void addApeMessageObserver(ApeMessageObserver apeMessageObserver){
+		apeMessageObservers.add(apeMessageObserver);
+	}
+	public void notifyToApeMessageObservers(JSONObject jsonMessage){
+		apeMessageObservers.forEach((apeMessageObserver) -> apeMessageObserver.processApeMessage(jsonMessage));
+	}
+	public void processMessage(JSONObject jsonMessage) {
+		int messageId=jsonMessage.getInt("messageId");
+		//int messageLength=jsonMessage.getInt("messageLength");
+		if(messageId==30)
+		{
+			pingCounter=0;
+		}
+		//no need to notify for all
+//		List<Integer> notifyMessages=Arrays.asList(1,30);
+//		if(notifyMessages.contains(messageId)){
+//			notifyToApeMessageObservers(jsonMessage);
+//		}
+		notifyToApeMessageObservers(jsonMessage);
 
 	}
 }
