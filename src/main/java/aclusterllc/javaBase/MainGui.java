@@ -35,7 +35,7 @@ public class MainGui implements ApeMessageObserver {
     }
 
     @Override
-    public void processApeMessage(JSONObject jsonMessage) {
+    public void processApeMessage(JSONObject jsonMessage, JSONObject info) {
         int messageId=jsonMessage.getInt("messageId");
         ApeClient apeClient= (ApeClient) jsonMessage.get("object");
         if(messageId==30){
@@ -46,6 +46,14 @@ public class MainGui implements ApeMessageObserver {
         else if(messageId==130){
             if(apeClient.clientInfo.getInt("machine_id")==1){
                 this.pingLabel.setText("");
+            }
+        }
+        else{
+            if(info.has("mainGuiMessage")){
+                this.mainTextArea.append(info.getString("mainGuiMessage")+"\r\n");
+            }
+            else{
+                this.mainTextArea.append(messageId+"\r\n");
             }
         }
     }

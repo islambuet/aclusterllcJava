@@ -72,7 +72,7 @@ public class ApeClient implements Runnable {
 						jsonObject.put("messageId",130);
 						jsonObject.put("messageLength",8);
 						jsonObject.put("object",this);
-						notifyToApeMessageObservers(jsonObject);
+						notifyToApeMessageObservers(jsonObject,new JSONObject());
 						sleep(pingDelayMillis);
 					}
 					catch (InterruptedException e) {
@@ -219,10 +219,11 @@ public class ApeClient implements Runnable {
 	public void addApeMessageObserver(ApeMessageObserver apeMessageObserver){
 		apeMessageObservers.add(apeMessageObserver);
 	}
-	public void notifyToApeMessageObservers(JSONObject jsonMessage){
-		apeMessageObservers.forEach((apeMessageObserver) -> apeMessageObserver.processApeMessage(jsonMessage));
+	public void notifyToApeMessageObservers(JSONObject jsonMessage,JSONObject info){
+		apeMessageObservers.forEach((apeMessageObserver) -> apeMessageObserver.processApeMessage(jsonMessage,info));
 	}
 	public void processMessage(JSONObject jsonMessage) {
+		JSONObject info=new JSONObject();
 		int messageId=jsonMessage.getInt("messageId");
 		//int messageLength=jsonMessage.getInt("messageLength");
 		if(messageId==30)
@@ -234,7 +235,8 @@ public class ApeClient implements Runnable {
 //		if(notifyMessages.contains(messageId)){
 //			notifyToApeMessageObservers(jsonMessage);
 //		}
-		notifyToApeMessageObservers(jsonMessage);
+
+		notifyToApeMessageObservers(jsonMessage,info);
 
 	}
 }
