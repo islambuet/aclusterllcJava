@@ -11,9 +11,12 @@ public class Main {
 
         Configurator.initialize(null, "./resources/log4j2.xml");
         Logger logger = LoggerFactory.getLogger(Main.class);
+//        JSONObject jsonObject=new JSONObject();
+//        System.out.println(jsonObject.get("shaiful"));
 
         ConfigurationHelper.loadConfig();
         System.out.println(ConfigurationHelper.configIni.getProperty("db_name"));
+        logger.info(ConfigurationHelper.dbBasicInfo.get("boards").toString());
 
         MainGui mainGui = new MainGui();
         mainGui.startGui();
