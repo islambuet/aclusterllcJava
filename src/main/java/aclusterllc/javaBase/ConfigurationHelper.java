@@ -31,7 +31,7 @@ public class ConfigurationHelper {
         }
         catch (IOException e)
         {
-            logger.info("File Config Read failed"+e.toString());
+            logger.info("File Config Read failed"+e);
             System.exit(0);
         }
         createDatabaseConnection();
@@ -49,7 +49,7 @@ public class ConfigurationHelper {
                 item.put("alarm_id",rs.getString("alarm_id"));
                 item.put("alarm_type",rs.getString("alarm_type"));
                 item.put("alarm_class",rs.getString("alarm_class"));
-                item.put("gui_alarm_id",rs.getString("gui_alarm_id"));
+                item.put("gui_id",rs.getString("gui_id"));
                 item.put("variable_name",rs.getString("variable_name"));
                 item.put("description",rs.getString("description"));
                 item.put("location",rs.getString("location"));
@@ -69,7 +69,7 @@ public class ConfigurationHelper {
                 item.put("sort_manager_id",rs.getString("sort_manager_id"));
                 item.put("description",rs.getString("description"));
                 item.put("bin_label",rs.getString("bin_label"));
-                item.put("gui_bin_id",rs.getString("gui_bin_id"));
+                item.put("gui_id",rs.getString("gui_id"));
                 item.put("recirc_bin",rs.getString("recirc_bin"));
                 item.put("reject_bin",rs.getString("reject_bin"));
                 results.put(rs.getString("machine_id")+"_"+rs.getString("bin_id"),item);
@@ -125,7 +125,7 @@ public class ConfigurationHelper {
                 item.put("conveyor_type",rs.getString("conveyor_type"));
                 item.put("conveyor_name",rs.getString("conveyor_name"));
                 item.put("conveyor_tag_name",rs.getString("conveyor_tag_name"));
-                item.put("gui_conveyor_id",rs.getString("gui_conveyor_id"));
+                item.put("gui_id",rs.getString("gui_id"));
                 results.put(rs.getString("machine_id")+"_"+rs.getString("conveyor_id"),item);
             }
             dbBasicInfo.put("conveyors",results);
@@ -142,7 +142,7 @@ public class ConfigurationHelper {
                 item.put("device_type",rs.getString("device_type"));
                 item.put("device_name",rs.getString("device_name"));
                 item.put("ip_address",rs.getString("ip_address"));
-                item.put("gui_device_id",rs.getString("gui_device_id"));
+                item.put("gui_id",rs.getString("gui_id"));
                 results.put(rs.getString("machine_id")+"_"+rs.getString("device_id"),item);
             }
             dbBasicInfo.put("devices",results);
@@ -160,7 +160,7 @@ public class ConfigurationHelper {
                 item.put("input_type",rs.getString("input_type"));
                 item.put("input_name",rs.getString("input_name"));
                 item.put("electrical_name",rs.getString("electrical_name"));
-                item.put("gui_input_id",rs.getString("gui_input_id"));
+                item.put("gui_id",rs.getString("gui_id"));
                 item.put("description",rs.getString("description"));
                 item.put("enable_history",rs.getString("enable_history"));
                 item.put("device_type",rs.getString("device_type"));
@@ -207,7 +207,7 @@ public class ConfigurationHelper {
                 item.put("electrical_name",rs.getString("electrical_name"));
                 item.put("location",rs.getString("location"));
                 item.put("ip_address",rs.getString("ip_address"));
-                item.put("gui_motor_id",rs.getString("gui_motor_id"));
+                item.put("gui_id",rs.getString("gui_id"));
                 item.put("device_number",rs.getString("device_number"));
                 item.put("input_id",rs.getString("input_id"));
                 item.put("alarm_id",rs.getString("alarm_id"));
@@ -253,11 +253,11 @@ public class ConfigurationHelper {
 
         }
         catch (SQLException e) {
-            logger.error("[Database] Failed To Connect with database.Closing Java Program."+e.toString());
+            logger.error("[Database] Failed To Connect with database.Closing Java Program."+e);
             System.exit(0);
         }
         catch (Exception ex) {
-            logger.error("[Database] Failed To get Data from database.Closing Java Program."+ex.toString());
+            logger.error("[Database] Failed To get Data from database.Closing Java Program."+ex);
             System.exit(0);
         }
     }

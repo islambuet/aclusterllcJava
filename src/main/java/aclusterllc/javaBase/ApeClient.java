@@ -49,7 +49,7 @@ public class ApeClient implements Runnable {
 					sleep(reconnectThreadDelayMillis);
 				}
 				catch (InterruptedException e) {
-					logger.info("Reconnecting Exception."+e.getMessage());
+					logger.info("Reconnecting Exception."+e);
 				}
 			}
 			logger.info("Reconnect End.MachinedId: "+clientInfo.get("machine_id"));
@@ -100,7 +100,7 @@ public class ApeClient implements Runnable {
 				socketChannel.write(buf);
 			}
 			catch (IOException e) {
-				logger.error("[SEND_MESSAGE_TO_APE] "+e.getMessage());
+				logger.error("[SEND_MESSAGE_TO_APE] "+e);
 			}
 		}
 	}

@@ -30,7 +30,7 @@ public class ApeClientMessageQueueHandler {
         try {
             messageBuffer.put(jsonObject);//put waits if buffer full. add throws exception if buffer full
         } catch (InterruptedException e) {
-            logger.error("Exception adding queue."+e.getMessage());
+            logger.error("Exception adding queue."+e);
         }
     }
     public void processMessageFromBuffer(){
@@ -41,7 +41,7 @@ public class ApeClientMessageQueueHandler {
                 apeClient.processMessage(jsonMessage);
             }
             catch (InterruptedException e) {
-                logger.error("Error in take."+e.getMessage());
+                logger.error("Error in take."+e);
             }
         }
     }
