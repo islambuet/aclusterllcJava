@@ -5,8 +5,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 
 import static java.lang.String.format;
 
@@ -60,7 +62,35 @@ public class ApeClientHelper {
         catch (SQLException e) {
             logger.error(e.toString());
         }
-        System.out.println(query);
+    }
+    public static void handleMessage_3(Connection connection, JSONObject clientInfo, byte[] dataBytes){
+        JSONObject inputsInfo= (JSONObject) ConfigurationHelper.dbBasicInfo.get("inputs");
+        int machineId=clientInfo.getInt("machine_id");
+        int inputId = (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 0, 2));
+        int state=dataBytes[2];
+        try {
+            Statement stmt = connection.createStatement();
+            String query = String.format("SELECT id,state FROM input_states WHERE machine_id=%d AND input_id=%d", machineId,inputId);
+            ResultSet rs = stmt.executeQuery(query);
+            if (rs.next())
+            {
+                if(rs.getInt("state")!=state){
+                    String query2= format("UPDATE input_states SET `state`=%d,`updated_at`=now() WHERE id=%d;",state,rs.getInt("id"));
+                    if((inputsInfo.has(machineId+"_"+inputId)) && (((JSONObject)inputsInfo.get(machineId+"_"+inputId)).getInt("enable_history")==1)){
+                        query2+= format("INSERT INTO input_states_history (`machine_id`, `input_id`,`state`) VALUES (%d,%d,%d);",machineId,inputId,state);
+                    }
+                    Statement stmt2 = connection.createStatement();
+                    stmt2.execute(query2);
+                    stmt2.close();
+
+                }
+            }
+            rs.close();
+            stmt.close();
+        }
+        catch (Exception e) {
+            logger.error(e.toString());
+        }
     }
 
 }
