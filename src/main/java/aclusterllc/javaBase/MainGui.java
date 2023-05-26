@@ -9,6 +9,8 @@ import javax.swing.text.BadLocationException;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainGui implements ApeMessageObserver {
     public JTextArea mainTextArea;
@@ -54,8 +56,7 @@ public class MainGui implements ApeMessageObserver {
             else{
                 LocalDateTime now = LocalDateTime.now();
                 DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
-
-                String displayMessage = String.format("[%s] :: %s [%s][M:%s]",now.format(dateTimeFormatter),ConfigurationHelper.apeMessageName.get(messageId),  messageId,apeClient.clientInfo.get("machine_id"));
+                String displayMessage = String.format("[%s] :: %s [%s][M:%s].",now.format(dateTimeFormatter),((JSONObject)ConfigurationHelper.systemConstants.get("APE_MESSAGE_ID_NAME")).get(messageId+""),  messageId,apeClient.clientInfo.get("machine_id"));
 
 
                 int SCROLL_BUFFER_SIZE = 199;

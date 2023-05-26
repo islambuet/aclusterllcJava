@@ -22,7 +22,10 @@ public class ConfigurationHelper {
     public static final JSONObject countersCurrentValue = new JSONObject();
     public static final JSONObject motorsCurrentSpeed = new JSONObject();
     public static final Map<Integer, Integer> apeClientConnectionStatus  = new HashMap<>();
-    public static final Map<Integer, String> apeMessageName  = new HashMap<>();
+    public static final JSONObject systemConstants = new JSONObject();
+
+
+
 
 
     public static void loadConfig(){
@@ -35,7 +38,7 @@ public class ConfigurationHelper {
             logger.info("File Config Read failed"+e);
             System.exit(0);
         }
-        setApeMessageName();
+        setSystemConstants();
         createDatabaseConnection();
         try {
             Connection connection=getConnection();
@@ -263,58 +266,74 @@ public class ConfigurationHelper {
             System.exit(0);
         }
     }
-    public static void setApeMessageName(){
-        apeMessageName.put(1, "System State Message");
-        apeMessageName.put(2, "Inputs Message");
-        apeMessageName.put(3, "Input Change Message");
-        apeMessageName.put(4, "Errors Message");
-        apeMessageName.put(5, "Jams Message");
-        apeMessageName.put(6, "ConfirmationPEBlocked Message");
-        apeMessageName.put(7, "ConfirmationPEBlocked change Message");
-        apeMessageName.put(8, "BinPartiallyFull Message");
-        apeMessageName.put(9, "BinPartiallyFull change Message");
-        apeMessageName.put(10, "BinFull Message");
-        apeMessageName.put(11, "BinFull change Message");
-        apeMessageName.put(12, "BinDisabled Message");
-        apeMessageName.put(13, "BinDisabled change Message");
-        apeMessageName.put(14, "Devices Connected Message");
-        apeMessageName.put(15, "Device Connected Change Message");
-        apeMessageName.put(16, "Sync Response");
-        apeMessageName.put(17, "TrayMissing Message");
-        apeMessageName.put(18, "TrayMissing change Message");
-        apeMessageName.put(20, "Dimension Message");
-        apeMessageName.put(21, "Barcode Result");
-        apeMessageName.put(22, "ConfirmDestination Message");
-        apeMessageName.put(30, "Ping Response");
-        apeMessageName.put(40, "BinMode Message");
-        apeMessageName.put(41, "BinModechange Message");
-        apeMessageName.put(42, "ConveyorState Message");
-        apeMessageName.put(43, "ConveyorStateChange Message");
-        apeMessageName.put(44, "SensorHit Message");
-        apeMessageName.put(45, "Event Message");
-        apeMessageName.put(46, "InductLineState Message");
-        apeMessageName.put(47, "InductLineStateChange Message");
-        apeMessageName.put(48, "PieceInducted Message");
-        apeMessageName.put(49, "Motor Speed Message");
-        apeMessageName.put(50, "EStop Message");
-        apeMessageName.put(53, "Outputs Message");
-        apeMessageName.put(54, "Param Value Message");
-        apeMessageName.put(120, "SetMode Message");
-        apeMessageName.put(101, "Request Inputs State Message");
-        apeMessageName.put(102, "Request Errors Message");
-        apeMessageName.put(103, "Request Jams Message");
-        apeMessageName.put(105, "Request ConfirmationPEBlocked Message");
-        apeMessageName.put(106, "Request BinPartiallyFull Message");
-        apeMessageName.put(107, "Request BinFull Message");
-        apeMessageName.put(108, "Request BinDisabled Message");
-        apeMessageName.put(109, "Request DevicesConnected State Message");
-        apeMessageName.put(110, "Request BinMode Message");
-        apeMessageName.put(111, "SetBinMode Message");
-        apeMessageName.put(112, "Request ConveyorState Message");
-        apeMessageName.put(113, "Request TrayMissing Message");
-        apeMessageName.put(114, "Request InductLineState Message");
-        apeMessageName.put(116, "Sync Request");
-        apeMessageName.put(130, "Ping Request");
+    public static void setSystemConstants(){
+        JSONObject APE_MESSAGE_ID_NAME  = new JSONObject();
+
+        APE_MESSAGE_ID_NAME.put("1", "System State Message");
+        APE_MESSAGE_ID_NAME.put("2", "Inputs Message");
+        APE_MESSAGE_ID_NAME.put("3", "Input Change Message");
+        APE_MESSAGE_ID_NAME.put("4", "Errors Message");
+        APE_MESSAGE_ID_NAME.put("5", "Jams Message");
+        APE_MESSAGE_ID_NAME.put("6", "ConfirmationPEBlocked Message");
+        APE_MESSAGE_ID_NAME.put("7", "ConfirmationPEBlocked change Message");
+        APE_MESSAGE_ID_NAME.put("8", "BinPartiallyFull Message");
+        APE_MESSAGE_ID_NAME.put("9", "BinPartiallyFull change Message");
+        APE_MESSAGE_ID_NAME.put("10", "BinFull Message");
+        APE_MESSAGE_ID_NAME.put("11", "BinFull change Message");
+        APE_MESSAGE_ID_NAME.put("12", "BinDisabled Message");
+        APE_MESSAGE_ID_NAME.put("13", "BinDisabled change Message");
+        APE_MESSAGE_ID_NAME.put("14", "Devices Connected Message");
+        APE_MESSAGE_ID_NAME.put("15", "Device Connected Change Message");
+        APE_MESSAGE_ID_NAME.put("16", "Sync Response");
+        APE_MESSAGE_ID_NAME.put("17", "TrayMissing Message");
+        APE_MESSAGE_ID_NAME.put("18", "TrayMissing change Message");
+        APE_MESSAGE_ID_NAME.put("20", "Dimension Message");
+        APE_MESSAGE_ID_NAME.put("21", "Barcode Result");
+        APE_MESSAGE_ID_NAME.put("22", "ConfirmDestination Message");
+        APE_MESSAGE_ID_NAME.put("30", "Ping Response");
+        APE_MESSAGE_ID_NAME.put("40", "BinMode Message");
+        APE_MESSAGE_ID_NAME.put("41", "BinModechange Message");
+        APE_MESSAGE_ID_NAME.put("42", "ConveyorState Message");
+        APE_MESSAGE_ID_NAME.put("43", "ConveyorStateChange Message");
+        APE_MESSAGE_ID_NAME.put("44", "SensorHit Message");
+        APE_MESSAGE_ID_NAME.put("45", "Event Message");
+        APE_MESSAGE_ID_NAME.put("46", "InductLineState Message");
+        APE_MESSAGE_ID_NAME.put("47", "InductLineStateChange Message");
+        APE_MESSAGE_ID_NAME.put("48", "PieceInducted Message");
+        APE_MESSAGE_ID_NAME.put("49", "Motor Speed Message");
+        APE_MESSAGE_ID_NAME.put("50", "EStop Message");
+        APE_MESSAGE_ID_NAME.put("53", "Outputs Message");
+        APE_MESSAGE_ID_NAME.put("54", "Param Value Message");
+        APE_MESSAGE_ID_NAME.put("120", "SetMode Message");
+        APE_MESSAGE_ID_NAME.put("101", "Request Inputs State Message");
+        APE_MESSAGE_ID_NAME.put("102", "Request Errors Message");
+        APE_MESSAGE_ID_NAME.put("103", "Request Jams Message");
+        APE_MESSAGE_ID_NAME.put("105", "Request ConfirmationPEBlocked Message");
+        APE_MESSAGE_ID_NAME.put("106", "Request BinPartiallyFull Message");
+        APE_MESSAGE_ID_NAME.put("107", "Request BinFull Message");
+        APE_MESSAGE_ID_NAME.put("108", "Request BinDisabled Message");
+        APE_MESSAGE_ID_NAME.put("109", "Request DevicesConnected State Message");
+        APE_MESSAGE_ID_NAME.put("110", "Request BinMode Message");
+        APE_MESSAGE_ID_NAME.put("111", "SetBinMode Message");
+        APE_MESSAGE_ID_NAME.put("112", "Request ConveyorState Message");
+        APE_MESSAGE_ID_NAME.put("113", "Request TrayMissing Message");
+        APE_MESSAGE_ID_NAME.put("114", "Request InductLineState Message");
+        APE_MESSAGE_ID_NAME.put("116", "Sync Request");
+        APE_MESSAGE_ID_NAME.put("130", "Ping Request");
+        systemConstants.put("APE_MESSAGE_ID_NAME",APE_MESSAGE_ID_NAME);
+
+        JSONObject SYSTEM_STATES  = new JSONObject();
+        SYSTEM_STATES.put("0", "Not Ready");
+        SYSTEM_STATES.put("1", "Ready");
+        SYSTEM_STATES.put("2", "Starting");
+        SYSTEM_STATES.put("3", "Running");
+        SYSTEM_STATES.put("4", "Stopping");
+        systemConstants.put("SYSTEM_STATES",SYSTEM_STATES);
+
+        JSONObject SYSTEM_MODES  = new JSONObject();
+        SYSTEM_MODES.put("0", "Auto");
+        SYSTEM_MODES.put("1", "Manual");
+        systemConstants.put("SYSTEM_MODES",SYSTEM_MODES);
     }
     public static void createDatabaseConnection() {
         try {

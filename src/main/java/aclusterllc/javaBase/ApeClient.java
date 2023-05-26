@@ -10,8 +10,11 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.sql.Connection;
+import java.sql.Statement;
 import java.util.*;
 
+import static java.lang.String.format;
 import static java.lang.Thread.sleep;
 
 
@@ -108,7 +111,7 @@ public class ApeClient implements Runnable {
 		if(!worker.isAlive()){
 			worker = new Thread(this);
 			try {
-				logger.info("Trying to connect  with Ape."+clientInfo.get("machine_id") );
+				logger.info("Trying to connect  with Ape - "+clientInfo.get("machine_id") );
 				selector = Selector.open();
 				InetSocketAddress inetSocketAddress = new InetSocketAddress(clientInfo.getString("ip_address"), clientInfo.getInt("port_number"));
 				socketChannel = SocketChannel.open(inetSocketAddress);
@@ -227,7 +230,31 @@ public class ApeClient implements Runnable {
 		int messageId=jsonMessage.getInt("messageId");
 		int messageLength=jsonMessage.getInt("messageLength");
 		if(messageLength>8){
-			byte[] bodyBytes= (byte[]) jsonMessage.get("bodyBytes");
+			try {
+				byte[] bodyBytes= (byte[]) jsonMessage.get("bodyBytes");
+				//byte[] timestampBytes = Arrays.copyOfRange(bodyBytes, 0, 4);
+				byte[] dataBytes = Arrays.copyOfRange(bodyBytes, 4, bodyBytes.length);
+				Connection connection=ConfigurationHelper.getConnection();
+				switch (messageId){
+					case 1:
+						Statement stmt = connection.createStatement();
+						String sql = format("UPDATE machines SET `machine_state`=%d, `machine_mode`=%d, `updated_at`=now()  WHERE `machine_id`=%d LIMIT 1",
+								dataBytes[0],
+								dataBytes[1],
+								clientInfo.getInt("machine_id"));
+						stmt.execute(sql);
+						stmt.close();
+						break;
+					case 2:
+
+						break;
+				}
+				connection.close();
+			}
+			catch (Exception ex){
+				logger.error("[MESSAGE_PROCESS]"+ex);
+			}
+
 
 		}
 		//MSG_LENGTH = 8

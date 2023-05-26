@@ -3,6 +3,7 @@ package aclusterllc.javaBase;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -14,6 +15,13 @@ import java.util.concurrent.TimeUnit;
 
 public class Test {
     public static void main(String[] args) {
+        ConfigurationHelper.loadConfig();
+        JSONObject x= (JSONObject) ConfigurationHelper.systemConstants.get("APE_MESSAGE_ID_NAME");
+        int messageId=1;
+        System.out.println(x.get(messageId+""));
+        //System.out.println(ConfigurationHelper.systemConstants.get("APE_MESSAGE_ID_NAME").get(1));
+    }
+    public static void main2(String[] args) {
         BlockingQueue<JSONObject> messageBuffer = new LinkedBlockingQueue<JSONObject>();
 
         for(int i=5;i<10;i++){
