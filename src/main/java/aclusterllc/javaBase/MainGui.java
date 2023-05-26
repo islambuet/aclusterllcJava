@@ -5,7 +5,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.text.BadLocationException;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class MainGui implements ApeMessageObserver {
     public JTextArea mainTextArea;
@@ -39,21 +42,34 @@ public class MainGui implements ApeMessageObserver {
         int messageId=jsonMessage.getInt("messageId");
         ApeClient apeClient= (ApeClient) jsonMessage.get("object");
         if(messageId==30){
-            if(apeClient.clientInfo.getInt("machine_id")==1){
-                this.pingLabel.setText("\u26AB");
-            }
+            pingLabel.setText("\u26AB");
         }
         else if(messageId==130){
-            if(apeClient.clientInfo.getInt("machine_id")==1){
-                this.pingLabel.setText("");
-            }
+            pingLabel.setText("");
         }
         else{
             if(info.has("mainGuiMessage")){
-                this.mainTextArea.append(info.getString("mainGuiMessage")+"\r\n");
+                mainTextArea.append(info.getString("mainGuiMessage")+"\r\n");
             }
             else{
-                this.mainTextArea.append(messageId+"\r\n");
+                LocalDateTime now = LocalDateTime.now();
+                DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+
+                String displayMessage = String.format("[%s] :: %s [%s][M:%s]",now.format(dateTimeFormatter),ConfigurationHelper.apeMessageName.get(messageId),  messageId,apeClient.clientInfo.get("machine_id"));
+
+
+                int SCROLL_BUFFER_SIZE = 199;
+                int numLinesToTrunk = mainTextArea.getLineCount() - SCROLL_BUFFER_SIZE;
+                if (numLinesToTrunk > 0) {
+                    try {
+                        int posOfLastLineToTrunk = mainTextArea.getLineEndOffset(numLinesToTrunk - 1);
+                        mainTextArea.replaceRange("", 0, posOfLastLineToTrunk);
+                    }
+                    catch (BadLocationException ex) {
+                        System.out.println(ex.toString());
+                    }
+                }
+                mainTextArea.append(displayMessage+"\r\n");
             }
         }
     }

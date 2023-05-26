@@ -225,11 +225,24 @@ public class ApeClient implements Runnable {
 	public void processMessage(JSONObject jsonMessage) {
 		JSONObject info=new JSONObject();
 		int messageId=jsonMessage.getInt("messageId");
-		//int messageLength=jsonMessage.getInt("messageLength");
-		if(messageId==30)
-		{
-			pingCounter=0;
+		int messageLength=jsonMessage.getInt("messageLength");
+		if(messageLength>8){
+			byte[] bodyBytes= (byte[]) jsonMessage.get("bodyBytes");
+
 		}
+		//MSG_LENGTH = 8
+		else {
+			switch(messageId) {
+				case 16:
+					break;
+				case 30:
+					pingCounter=0;
+					break;
+				default:
+					// code block
+			}
+		}
+
 		//no need to notify for all
 //		List<Integer> notifyMessages=Arrays.asList(1,30);
 //		if(notifyMessages.contains(messageId)){
