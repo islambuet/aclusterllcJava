@@ -237,17 +237,10 @@ public class ApeClient implements Runnable {
 				Connection connection=ConfigurationHelper.getConnection();
 				switch (messageId){
 					case 1:
-						Statement stmt = connection.createStatement();
-						String sql = format("UPDATE machines SET `machine_state`=%d, `machine_mode`=%d, `updated_at`=now()  WHERE `machine_id`=%d LIMIT 1",
-								dataBytes[0],
-								dataBytes[1],
-								clientInfo.getInt("machine_id"));
-						stmt.execute(sql);
-						stmt.close();
+						ApeClientHelper.handleMessage_1(connection,clientInfo,dataBytes);
 						break;
 					case 2:
-						byte []bits=CommonHelper.bitsFromBytes(dataBytes,4);
-
+						ApeClientHelper.handleMessage_2(connection,clientInfo,dataBytes);
 						break;
 				}
 				connection.close();
