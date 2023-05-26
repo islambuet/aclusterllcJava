@@ -1,6 +1,8 @@
 package aclusterllc.javaBase;
 
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 import java.math.BigInteger;
@@ -9,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CommonHelper {
+    static Logger logger = LoggerFactory.getLogger(CommonHelper.class);
     public static long bytesToLong(byte[] bytes)
     {
         return new BigInteger(bytes).longValue();
@@ -44,5 +47,25 @@ public class CommonHelper {
         buff.put(a);
         buff.put(b);
         return buff.array();
+    }
+    public static byte[] bitsFromBytes(byte[] source,int group){
+        byte[] bits=new byte[source.length*8];
+        try{
+            for(int i=0;i<source.length/group;i++){
+                for(int j=0;j<group;j++) {
+                    int byteIndex=i*group+j;
+                    int bitIndex=(i*group+(group-j)-1)*8;
+                    byte s=source[byteIndex];
+                    for(int b=0;b<8;b++){
+                        bits[bitIndex+b]= (byte) ((s>>b)&1);
+                    }
+                }
+            }
+        }
+        catch (Exception ex){
+            logger.error(ex.toString());
+        }
+        return bits;
+
     }
 }

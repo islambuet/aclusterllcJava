@@ -246,6 +246,7 @@ public class ApeClient implements Runnable {
 						stmt.close();
 						break;
 					case 2:
+						byte []bits=CommonHelper.bitsFromBytes(dataBytes,4);
 
 						break;
 				}
