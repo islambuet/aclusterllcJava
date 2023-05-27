@@ -89,11 +89,14 @@ public class ApeClientHelper {
             logger.error(e.toString());
         }
     }
-    public static void handleMessage_4(Connection connection, JSONObject clientInfo, byte[] dataBytes){
+    public static void handleMessage_4_5(Connection connection, JSONObject clientInfo, byte[] dataBytes,int messageId){
         int machineId=clientInfo.getInt("machine_id");
         JSONArray activeAlarms= DatabaseHelper.getActiveAlarms(connection,machineId);
         JSONObject jsonActiveAlarms=new JSONObject();
         int alarm_type=0;
+        if(messageId==5){
+            alarm_type=1;
+        }
         for(int i=0;i<activeAlarms.length();i++){
             JSONObject item= (JSONObject) activeAlarms.get(i);
             if(item.getInt("alarm_type")==alarm_type){
@@ -105,7 +108,6 @@ public class ApeClientHelper {
         String query="";
 
         for(int i=0;i<bits.length;i++){
-            System.out.println((i+1)+" "+bits[i]);
             if(bits[i]==1){
                 if(!(jsonActiveAlarms.has(machineId+"_"+(i+1)))){
                     query+= format("INSERT INTO active_alarms (`machine_id`, `alarm_id`,`alarm_type`) VALUES (%d,%d,%d);",machineId,(i+1),alarm_type);
