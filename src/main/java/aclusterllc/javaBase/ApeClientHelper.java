@@ -1,5 +1,6 @@
 package aclusterllc.javaBase;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,16 +53,12 @@ public class ApeClientHelper {
             }
         }
         try {
-            connection.setAutoCommit(false);
-            Statement stmt = connection.createStatement();
-            stmt.execute(query);
-            connection.commit();
-            connection.setAutoCommit(true);
-            stmt.close();
+            DatabaseHelper.runMultipleQuery(connection,query);
         }
         catch (SQLException e) {
             logger.error(e.toString());
         }
+
     }
     public static void handleMessage_3(Connection connection, JSONObject clientInfo, byte[] dataBytes){
         JSONObject inputsInfo= (JSONObject) ConfigurationHelper.dbBasicInfo.get("inputs");
@@ -89,6 +86,45 @@ public class ApeClientHelper {
             stmt.close();
         }
         catch (Exception e) {
+            logger.error(e.toString());
+        }
+    }
+    public static void handleMessage_4(Connection connection, JSONObject clientInfo, byte[] dataBytes){
+        int machineId=clientInfo.getInt("machine_id");
+        JSONArray activeAlarms= DatabaseHelper.getActiveAlarms(connection,machineId);
+        JSONObject jsonActiveAlarms=new JSONObject();
+        int alarm_type=0;
+        for(int i=0;i<activeAlarms.length();i++){
+            JSONObject item= (JSONObject) activeAlarms.get(i);
+            if(item.getInt("alarm_type")==alarm_type){
+                jsonActiveAlarms.put(item.getInt("machine_id")+"_"+item.getInt("alarm_id"),item);
+            }
+
+        }
+        byte []bits=CommonHelper.bitsFromBytes(dataBytes,4);
+        String query="";
+
+        for(int i=0;i<bits.length;i++){
+            System.out.println((i+1)+" "+bits[i]);
+            if(bits[i]==1){
+                if(!(jsonActiveAlarms.has(machineId+"_"+(i+1)))){
+                    query+= format("INSERT INTO active_alarms (`machine_id`, `alarm_id`,`alarm_type`) VALUES (%d,%d,%d);",machineId,(i+1),alarm_type);
+                }
+            }
+            else{
+                if((jsonActiveAlarms.has(machineId+"_"+(i+1)))){
+                    JSONObject item= (JSONObject) jsonActiveAlarms.get(machineId+"_"+(i+1));
+                    query+= format("INSERT INTO active_alarms_history (`machine_id`, `alarm_id`,`alarm_type`,`date_active`) VALUES (%d,%d,%d,'%s');"
+                            ,machineId,(i+1),alarm_type,item.get("date_active"));
+                    query+=format("DELETE FROM active_alarms where id=%d;",item.getInt("id"));
+                }
+
+            }
+        }
+        try {
+            DatabaseHelper.runMultipleQuery(connection,query);
+        }
+        catch (SQLException e) {
             logger.error(e.toString());
         }
     }

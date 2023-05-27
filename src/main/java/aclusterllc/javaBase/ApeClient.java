@@ -245,6 +245,9 @@ public class ApeClient implements Runnable {
 					case 3:
 						ApeClientHelper.handleMessage_3(connection,clientInfo,dataBytes);
 						break;
+					case 4:
+						ApeClientHelper.handleMessage_4(connection,clientInfo,dataBytes);
+						break;
 				}
 				connection.close();
 			}

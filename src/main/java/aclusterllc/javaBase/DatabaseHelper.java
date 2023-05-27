@@ -1,5 +1,6 @@
 package aclusterllc.javaBase;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +14,39 @@ import static java.lang.String.format;
 
 public class DatabaseHelper {
     static Logger logger = LoggerFactory.getLogger(DatabaseHelper.class);
+    public static void runMultipleQuery(Connection connection,String query) throws SQLException {
+            connection.setAutoCommit(false);
+            Statement stmt = connection.createStatement();
+            stmt.execute(query);
+            connection.commit();
+            connection.setAutoCommit(true);
+            stmt.close();
+    }
+    public static JSONArray getActiveAlarms(Connection connection,int machineId) {
+        JSONArray resultsJsonArray = new JSONArray();
+        try {
+            Statement stmt = connection.createStatement();
+            String query = String.format("SELECT *,UNIX_TIMESTAMP(date_active) AS date_active_timestamp FROM active_alarms WHERE machine_id=%d ORDER BY id DESC", machineId);
+            ResultSet rs = stmt.executeQuery(query);
+            while (rs.next())
+            {
+                JSONObject row=new JSONObject();
+                row.put("id",rs.getString("id"));
+                row.put("machine_id",rs.getString("machine_id"));
+                row.put("alarm_id",rs.getString("alarm_id"));
+                row.put("alarm_type",rs.getString("alarm_type"));
+                row.put("date_active",rs.getString("date_active"));
+                row.put("date_active_timestamp",rs.getLong("date_active_timestamp"));
+                resultsJsonArray.put(row);
+            }
+            rs.close();
+            stmt.close();
+        }
+        catch (Exception e) {
+            logger.error(e.toString());
+        }
+        return resultsJsonArray;
+    }
     public static JSONObject getInputStates(Connection connection,int machineId){
         JSONObject resultJsonObject = new JSONObject();
         try {
