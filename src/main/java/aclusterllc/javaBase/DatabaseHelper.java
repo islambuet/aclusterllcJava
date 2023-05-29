@@ -5,10 +5,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 
 import static java.lang.String.format;
 
@@ -61,6 +58,32 @@ public class DatabaseHelper {
                 row.put("state",rs.getInt("state"));
                 row.put("machineId",machineId);
                 resultJsonObject.put(machineId+"_"+rs.getString("input_id"),row);
+            }
+            rs.close();
+            stmt.close();
+        }
+        catch (Exception e) {
+            logger.error(e.toString());
+        }
+        return resultJsonObject;
+    }
+    public static JSONObject getBinStates(Connection connection,int machineId){
+        System.out.println(machineId);
+        JSONObject resultJsonObject = new JSONObject();
+        try {
+            Statement stmt = connection.createStatement();
+            String query = String.format("SELECT * FROM bin_states WHERE machine_id=%d", machineId);
+            ResultSet rs = stmt.executeQuery(query);
+            ResultSetMetaData rsMetaData = rs.getMetaData();
+            while (rs.next())
+            {
+                int numColumns = rsMetaData.getColumnCount();
+                JSONObject row=new JSONObject();
+                for (int i=1; i<=numColumns; i++) {
+                    String column_name = rsMetaData.getColumnName(i);
+                    row.put(column_name,rs.getString(column_name));
+                }
+                resultJsonObject.put(machineId+"_"+rs.getString("bin_id"),row);
             }
             rs.close();
             stmt.close();

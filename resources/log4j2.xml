@@ -24,10 +24,38 @@
       </Policies>
       <DefaultRolloverStrategy max="100"/>
     </RollingFile>
+    <RollingFile name="ApeClientHelper" fileName="logs\\ApeClientHelper.log"
+                 filePattern="logs\\$${date:yyyy-MM}\\ApeClientHelper-%d{MM-dd-yyyy}-%i.log.gz">
+      <PatternLayout>
+        <Pattern>%d{yyyy-MM-dd HH:mm:ss:SSS} [%-5p] %c{1}:%L - %m%n</Pattern>
+      </PatternLayout>
+      <Policies>
+        <TimeBasedTriggeringPolicy />
+        <SizeBasedTriggeringPolicy size="10 MB"/>
+      </Policies>
+      <DefaultRolloverStrategy max="100"/>
+    </RollingFile>
+    <RollingFile name="DatabaseHelper" fileName="logs\\DatabaseHelper.log"
+                 filePattern="logs\\$${date:yyyy-MM}\\DatabaseHelper-%d{MM-dd-yyyy}-%i.log.gz">
+      <PatternLayout>
+        <Pattern>%d{yyyy-MM-dd HH:mm:ss:SSS} [%-5p] %c{1}:%L - %m%n</Pattern>
+      </PatternLayout>
+      <Policies>
+        <TimeBasedTriggeringPolicy />
+        <SizeBasedTriggeringPolicy size="10 MB"/>
+      </Policies>
+      <DefaultRolloverStrategy max="100"/>
+    </RollingFile>
   </Appenders>
   <Loggers>
     <Logger name="aclusterllc.javaBase.ApeClient" level="info" additivity="false">
       <AppenderRef ref="ApeClient"/>
+    </Logger>
+    <Logger name="aclusterllc.javaBase.ApeClientHelper" level="info" additivity="false">
+      <AppenderRef ref="ApeClientHelper"/>
+    </Logger>
+    <Logger name="aclusterllc.javaBase.DatabaseHelper" level="info" additivity="false">
+      <AppenderRef ref="DatabaseHelper"/>
     </Logger>
     <Root level="info">
       <AppenderRef ref="CommonLogger"/>

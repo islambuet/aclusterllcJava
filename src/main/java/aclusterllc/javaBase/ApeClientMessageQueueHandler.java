@@ -10,7 +10,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import static java.lang.Thread.sleep;
 
 public class ApeClientMessageQueueHandler {
-    Logger logger = LoggerFactory.getLogger(ApeClient.class);
+    Logger logger = LoggerFactory.getLogger(ApeClientMessageQueueHandler.class);
     //List<JSONObject> messageBuffer = new ArrayList<>();
     private final BlockingQueue<JSONObject> messageBuffer = new LinkedBlockingQueue<JSONObject>();
     public void start(){
