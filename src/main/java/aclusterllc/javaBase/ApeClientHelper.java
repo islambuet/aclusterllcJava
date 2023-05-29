@@ -231,19 +231,15 @@ public class ApeClientHelper {
         byte []bits=CommonHelper.bitsFromBytes(dataBytes,4);
         String query="";
         for(int i=0;i<bits.length;i++){
-            boolean insertHistory=false;
             if(deviceStates.has(machineId+"_"+(i+1))){
                 JSONObject deviceState= (JSONObject) deviceStates.get(machineId+"_"+(i+1));
                 if(deviceState.getInt("state")!=bits[i]){
                     query+= format("UPDATE device_states SET `state`=%d,`updated_at`=now() WHERE id=%d;",bits[i],deviceState.getInt("id"));
-                    insertHistory=true;
+                    query+= format("INSERT INTO device_states_history (`machine_id`, `device_id`,`state`) VALUES (%d,%d,%d);",machineId,(i+1),bits[i]);
                 }
             }
             else{
                 query+= format("INSERT INTO device_states (`machine_id`, `device_id`,`state`) VALUES (%d,%d,%d);",machineId,(i+1),bits[i]);
-                insertHistory=true;
-            }
-            if(insertHistory){
                 query+= format("INSERT INTO device_states_history (`machine_id`, `device_id`,`state`) VALUES (%d,%d,%d);",machineId,(i+1),bits[i]);
             }
         }
@@ -254,6 +250,31 @@ public class ApeClientHelper {
             logger.error(CommonHelper.getStackTraceString(e));
         }
 
+    }
+    public static void handleMessage_15(Connection connection, JSONObject clientInfo, byte[] dataBytes){
+        int machineId=clientInfo.getInt("machine_id");
+        JSONObject deviceStates=DatabaseHelper.getDeviceStates(connection,clientInfo.getInt("machine_id"));
+        int device_id = (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 0, 2));
+        int state=dataBytes[2];
+
+        String query="";
+        if(deviceStates.has(machineId+"_"+device_id)){
+            JSONObject deviceState= (JSONObject) deviceStates.get(machineId+"_"+device_id);
+            if(deviceState.getInt("state")!=state){
+                query+=format("UPDATE device_states SET `state`='%d', `updated_at`=now()  WHERE `id`=%d;",state,deviceState.getInt("id"));
+                query+=format("INSERT INTO device_states_history (`machine_id`, `device_id`,`state`) VALUES (%d,%d,%d);",machineId,device_id,state);
+            }
+        }
+        else{
+            query+= format("INSERT INTO device_states (`machine_id`, `device_id`,`state`) VALUES (%d,%d,%d);",machineId,device_id,state);
+            query+= format("INSERT INTO device_states_history (`machine_id`, `device_id`,`state`) VALUES (%d,%d,%d);",machineId,device_id,state);
+        }
+        try {
+            DatabaseHelper.runMultipleQuery(connection,query);
+        }
+        catch (SQLException e) {
+            logger.error(CommonHelper.getStackTraceString(e));
+        }
     }
 
 }
