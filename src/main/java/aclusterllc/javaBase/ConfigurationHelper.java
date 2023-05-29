@@ -44,184 +44,49 @@ public class ConfigurationHelper {
             Connection connection=getConnection();
             Statement stmt = connection.createStatement();
             String query = "SELECT * FROM alarms";
-            ResultSet rs = stmt.executeQuery(query);
-            ResultSetMetaData rsMetaData = rs.getMetaData();
-            int numColumns = rsMetaData.getColumnCount();
-            JSONObject results = new JSONObject();
-            while (rs.next())
-            {
-                JSONObject item=new JSONObject();
-                for (int i=1; i<=numColumns; i++) {
-                    String column_name = rsMetaData.getColumnName(i);
-                    item.put(column_name,rs.getString(column_name));
-                }
-                results.put(rs.getString("machine_id")+"_"+rs.getString("alarm_id")+"_"+rs.getString("alarm_type"),item);
-            }
-            dbBasicInfo.put("alarms",results);
+            dbBasicInfo.put("alarms",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "alarm_id", "alarm_type"}));
 
             query = "SELECT * FROM bins";
-            rs = stmt.executeQuery(query);
-            rsMetaData = rs.getMetaData();
-            numColumns = rsMetaData.getColumnCount();
-            results = new JSONObject();
-            while (rs.next())
-            {
-                JSONObject item=new JSONObject();
-                for (int i=1; i<=numColumns; i++) {
-                    String column_name = rsMetaData.getColumnName(i);
-                    item.put(column_name,rs.getString(column_name));
-                }
-                results.put(rs.getString("machine_id")+"_"+rs.getString("bin_id"),item);
-            }
-            dbBasicInfo.put("bins",results);
+            dbBasicInfo.put("bins",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "bin_id"}));
 
             query = "SELECT * FROM boards";
-            rs = stmt.executeQuery(query);
-            rsMetaData = rs.getMetaData();
-            numColumns = rsMetaData.getColumnCount();
-            results = new JSONObject();
-            while (rs.next())
-            {
-                JSONObject item=new JSONObject();
-                for (int i=1; i<=numColumns; i++) {
-                    String column_name = rsMetaData.getColumnName(i);
-                    item.put(column_name,rs.getString(column_name));
-                }
-                results.put(rs.getString("machine_id")+"_"+rs.getString("board_id"),item);
-            }
-            dbBasicInfo.put("boards",results);
+            dbBasicInfo.put("boards",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "board_id"}));
 
             query = "SELECT * FROM board_ios";
-            rs = stmt.executeQuery(query);
-            rsMetaData = rs.getMetaData();
-            numColumns = rsMetaData.getColumnCount();
-            results = new JSONObject();
-            while (rs.next())
-            {
-                JSONObject item=new JSONObject();
-                for (int i=1; i<=numColumns; i++) {
-                    String column_name = rsMetaData.getColumnName(i);
-                    item.put(column_name,rs.getString(column_name));
-                }
-                results.put(rs.getString("id"),item);
-            }
-            dbBasicInfo.put("board_ios",results);
+            dbBasicInfo.put("board_ios",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "id"}));
 
             query = "SELECT * FROM conveyors";
-            rs = stmt.executeQuery(query);
-            rsMetaData = rs.getMetaData();
-            numColumns = rsMetaData.getColumnCount();
-            results = new JSONObject();
-            while (rs.next())
-            {
-                JSONObject item=new JSONObject();
-                for (int i=1; i<=numColumns; i++) {
-                    String column_name = rsMetaData.getColumnName(i);
-                    item.put(column_name,rs.getString(column_name));
-                }
-                results.put(rs.getString("machine_id")+"_"+rs.getString("conveyor_id"),item);
-            }
-            dbBasicInfo.put("conveyors",results);
+            dbBasicInfo.put("conveyors",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "conveyor_id"}));
 
             query = "SELECT * FROM devices";
-            rs = stmt.executeQuery(query);
-            rsMetaData = rs.getMetaData();
-            numColumns = rsMetaData.getColumnCount();
-            results = new JSONObject();
-            while (rs.next())
-            {
-                JSONObject item=new JSONObject();
-                for (int i=1; i<=numColumns; i++) {
-                    String column_name = rsMetaData.getColumnName(i);
-                    item.put(column_name,rs.getString(column_name));
-                }
-                results.put(rs.getString("machine_id")+"_"+rs.getString("device_id"),item);
-            }
-            dbBasicInfo.put("devices",results);
+            dbBasicInfo.put("devices",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "device_id"}));
 
             query = "SELECT * FROM inputs";
-            rs = stmt.executeQuery(query);
-            rsMetaData = rs.getMetaData();
-            numColumns = rsMetaData.getColumnCount();
-            results = new JSONObject();
-            while (rs.next())
-            {
-                JSONObject item=new JSONObject();
-                for (int i=1; i<=numColumns; i++) {
-                    String column_name = rsMetaData.getColumnName(i);
-                    item.put(column_name,rs.getString(column_name));
-                }
-                results.put(rs.getString("machine_id")+"_"+rs.getString("input_id"),item);
-            }
-            dbBasicInfo.put("inputs",results);
+            dbBasicInfo.put("inputs",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "input_id"}));
 
             query = "SELECT * FROM machines";
-            rs = stmt.executeQuery(query);
-            rsMetaData = rs.getMetaData();
-            numColumns = rsMetaData.getColumnCount();
-            results = new JSONObject();
-            while (rs.next())
-            {
-                JSONObject item=new JSONObject();
-                for (int i=1; i<=numColumns; i++) {
-                    String column_name = rsMetaData.getColumnName(i);
-                    item.put(column_name,rs.getString(column_name));
-                }
-                results.put(rs.getString("machine_id"),item);
+            JSONObject machines=DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id"});
+            dbBasicInfo.put("machines",machines);
+            for (String machineId : machines.keySet()) {
                 for(int i=0;i<32;i++){
-                    countersCurrentValue.put(rs.getString("machine_id")+"_"+(i+1),0);
+                    countersCurrentValue.put(machineId+"_"+(i+1),0);
                 }
             }
-            dbBasicInfo.put("machines",results);
+
+
 
             query = "SELECT * FROM motors";
-            rs = stmt.executeQuery(query);
-            rsMetaData = rs.getMetaData();
-            numColumns = rsMetaData.getColumnCount();
-            results = new JSONObject();
-            while (rs.next())
-            {
-                JSONObject item=new JSONObject();
-                for (int i=1; i<=numColumns; i++) {
-                    String column_name = rsMetaData.getColumnName(i);
-                    item.put(column_name,rs.getString(column_name));
-                }
-                results.put(rs.getString("machine_id")+"_"+rs.getString("motor_id"),item);
-                motorsCurrentSpeed.put(rs.getString("machine_id")+"_"+rs.getString("motor_id"),0);
+            JSONObject motors=DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "motor_id"});
+            dbBasicInfo.put("motors",motors);
+            for (String motorKey : motors.keySet()) {
+                motorsCurrentSpeed.put(motorKey,0);
             }
-            dbBasicInfo.put("motors",results);
 
             query = "SELECT * FROM parameters";
-            rs = stmt.executeQuery(query);
-            rsMetaData = rs.getMetaData();
-            numColumns = rsMetaData.getColumnCount();
-            results = new JSONObject();
-            while (rs.next())
-            {
-                JSONObject item=new JSONObject();
-                for (int i=1; i<=numColumns; i++) {
-                    String column_name = rsMetaData.getColumnName(i);
-                    item.put(column_name,rs.getString(column_name));
-                }
-                results.put(rs.getString("machine_id")+"_"+rs.getString("param_id"),item);
-            }
-            dbBasicInfo.put("parameters",results);
+            dbBasicInfo.put("parameters",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "param_id"}));
 
             query = "SELECT * FROM scs";
-            rs = stmt.executeQuery(query);
-            rsMetaData = rs.getMetaData();
-            numColumns = rsMetaData.getColumnCount();
-            results = new JSONObject();
-            while (rs.next())
-            {
-                JSONObject item=new JSONObject();
-                for (int i=1; i<=numColumns; i++) {
-                    String column_name = rsMetaData.getColumnName(i);
-                    item.put(column_name,rs.getString(column_name));
-                }
-                results.put(rs.getString("value"),item);
-            }
-            dbBasicInfo.put("scs",results);
+            dbBasicInfo.put("scs",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "value"}));
 
         }
         catch (SQLException e) {

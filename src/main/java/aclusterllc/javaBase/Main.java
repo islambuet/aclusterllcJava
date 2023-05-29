@@ -11,8 +11,6 @@ public class Main {
 
         Configurator.initialize(null, "./resources/log4j2.xml");
         Logger logger = LoggerFactory.getLogger(Main.class);
-//        JSONObject jsonObject=new JSONObject();
-//        System.out.println(jsonObject.get("shaiful"));
 
         ConfigurationHelper.loadConfig();
 
