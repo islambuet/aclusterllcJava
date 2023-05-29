@@ -12,12 +12,14 @@ import static java.lang.String.format;
 public class DatabaseHelper {
     static Logger logger = LoggerFactory.getLogger(DatabaseHelper.class);
     public static void runMultipleQuery(Connection connection,String query) throws SQLException {
+        if(query.length()>0){
             connection.setAutoCommit(false);
             Statement stmt = connection.createStatement();
             stmt.execute(query);
             connection.commit();
             connection.setAutoCommit(true);
             stmt.close();
+        }
     }
     public static JSONArray getActiveAlarms(Connection connection,int machineId) {
         JSONArray resultsJsonArray = new JSONArray();
@@ -25,16 +27,16 @@ public class DatabaseHelper {
             Statement stmt = connection.createStatement();
             String query = String.format("SELECT *,UNIX_TIMESTAMP(date_active) AS date_active_timestamp FROM active_alarms WHERE machine_id=%d ORDER BY id DESC", machineId);
             ResultSet rs = stmt.executeQuery(query);
+            ResultSetMetaData rsMetaData = rs.getMetaData();
+            int numColumns = rsMetaData.getColumnCount();
             while (rs.next())
             {
-                JSONObject row=new JSONObject();
-                row.put("id",rs.getString("id"));
-                row.put("machine_id",rs.getString("machine_id"));
-                row.put("alarm_id",rs.getString("alarm_id"));
-                row.put("alarm_type",rs.getString("alarm_type"));
-                row.put("date_active",rs.getString("date_active"));
-                row.put("date_active_timestamp",rs.getLong("date_active_timestamp"));
-                resultsJsonArray.put(row);
+                JSONObject item=new JSONObject();
+                for (int i=1; i<=numColumns; i++) {
+                    String column_name = rsMetaData.getColumnName(i);
+                    item.put(column_name,rs.getString(column_name));
+                }
+                resultsJsonArray.put(item);
             }
             rs.close();
             stmt.close();
@@ -50,14 +52,16 @@ public class DatabaseHelper {
             Statement stmt = connection.createStatement();
             String query = String.format("SELECT id,input_id, state FROM input_states WHERE machine_id=%d", machineId);
             ResultSet rs = stmt.executeQuery(query);
+            ResultSetMetaData rsMetaData = rs.getMetaData();
+            int numColumns = rsMetaData.getColumnCount();
             while (rs.next())
             {
-                JSONObject row=new JSONObject();
-                row.put("id",rs.getInt("id"));
-                row.put("input_id",rs.getInt("input_id"));
-                row.put("state",rs.getInt("state"));
-                row.put("machineId",machineId);
-                resultJsonObject.put(machineId+"_"+rs.getString("input_id"),row);
+                JSONObject item=new JSONObject();
+                for (int i=1; i<=numColumns; i++) {
+                    String column_name = rsMetaData.getColumnName(i);
+                    item.put(column_name,rs.getString(column_name));
+                }
+                resultJsonObject.put(machineId+"_"+rs.getString("input_id"),item);
             }
             rs.close();
             stmt.close();
@@ -75,15 +79,15 @@ public class DatabaseHelper {
             String query = String.format("SELECT * FROM bin_states WHERE machine_id=%d", machineId);
             ResultSet rs = stmt.executeQuery(query);
             ResultSetMetaData rsMetaData = rs.getMetaData();
+            int numColumns = rsMetaData.getColumnCount();
             while (rs.next())
             {
-                int numColumns = rsMetaData.getColumnCount();
-                JSONObject row=new JSONObject();
+                JSONObject item=new JSONObject();
                 for (int i=1; i<=numColumns; i++) {
                     String column_name = rsMetaData.getColumnName(i);
-                    row.put(column_name,rs.getString(column_name));
+                    item.put(column_name,rs.getString(column_name));
                 }
-                resultJsonObject.put(machineId+"_"+rs.getString("bin_id"),row);
+                resultJsonObject.put(machineId+"_"+rs.getString("bin_id"),item);
             }
             rs.close();
             stmt.close();

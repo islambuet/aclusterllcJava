@@ -52,13 +52,11 @@ public class ApeClientHelper {
                     query+= format("INSERT INTO input_states_history (`machine_id`, `input_id`,`state`) VALUES (%d,%d,%d);",machineId,(i+1),bits[i]);
             }
         }
-        if(query.length()>0){
-            try {
-                DatabaseHelper.runMultipleQuery(connection,query);
-            }
-            catch (SQLException e) {
-                logger.error(e.toString());
-            }
+        try {
+            DatabaseHelper.runMultipleQuery(connection,query);
+        }
+        catch (SQLException e) {
+            logger.error(e.toString());
         }
 
     }
@@ -131,20 +129,12 @@ public class ApeClientHelper {
         catch (SQLException e) {
             logger.error(e.toString());
         }
-//        if(query.length()>0){
-//            try {
-//                DatabaseHelper.runMultipleQuery(connection,query);
-//            }
-//            catch (SQLException e) {
-//                logger.error(e.toString());
-//            }
-//        }
 
     }
     public static void handleMessage_6(Connection connection, JSONObject clientInfo, byte[] dataBytes){
 
         JSONObject binStates=DatabaseHelper.getBinStates(connection,clientInfo.getInt("machine_id"));
-        System.out.println(binStates);
+        //System.out.println(binStates);
 //        byte []bits=CommonHelper.bitsFromBytes(Arrays.copyOfRange(dataBytes, 4, dataBytes.length),4);
 //        System.out.println(CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 0, 4))+" "+bits.length);
     }
