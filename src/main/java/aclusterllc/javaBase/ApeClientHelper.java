@@ -93,7 +93,7 @@ public class ApeClientHelper {
         int machineId=clientInfo.getInt("machine_id");
         JSONArray activeAlarms= DatabaseHelper.getActiveAlarms(connection,machineId);
         JSONObject jsonActiveAlarms=new JSONObject();
-        int alarm_type=0;
+        int alarm_type=0;////messageId=4
         if(messageId==5){
             alarm_type=1;
         }
@@ -131,11 +131,14 @@ public class ApeClientHelper {
         }
 
     }
-    public static void handleMessage_6(Connection connection, JSONObject clientInfo, byte[] dataBytes,int messageId){
+    public static void handleMessage_6_8(Connection connection, JSONObject clientInfo, byte[] dataBytes,int messageId){
         int machineId=clientInfo.getInt("machine_id");
         JSONObject binStates=DatabaseHelper.getBinStates(connection,clientInfo.getInt("machine_id"));
         JSONObject bins= (JSONObject) ConfigurationHelper.dbBasicInfo.get("bins");
-        String columName="pe_blocked";
+        String columName="pe_blocked";////messageId=6
+        if(messageId==8){
+            columName="partially_full";
+        }
         byte []bits=CommonHelper.bitsFromBytes(Arrays.copyOfRange(dataBytes, 4, dataBytes.length),4);//0-3 is number of bins which is equal to bits length
         String query="";
         for(int i=0;i<bits.length;i++){
@@ -161,6 +164,45 @@ public class ApeClientHelper {
                 }
             }
 
+        }
+        //System.out.println("Query: "+query);
+        try {
+            DatabaseHelper.runMultipleQuery(connection,query);
+        }
+        catch (SQLException e) {
+            logger.error(e.toString());
+        }
+    }
+    public static void handleMessage_7_9(Connection connection, JSONObject clientInfo, byte[] dataBytes,int messageId){
+        int machineId=clientInfo.getInt("machine_id");
+        JSONObject binStates=DatabaseHelper.getBinStates(connection,clientInfo.getInt("machine_id"));
+        JSONObject bins= (JSONObject) ConfigurationHelper.dbBasicInfo.get("bins");
+        int bin_id = (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 0, 2));
+        int state=dataBytes[2];
+        String columName="pe_blocked";//messageId=7
+        if(messageId==9){
+            columName="partially_full";
+        }
+        String query="";
+        if(bins.has(machineId+"_"+bin_id)){
+            if(binStates.has(machineId+"_"+bin_id)){
+                JSONObject binState= (JSONObject) binStates.get(machineId+"_"+bin_id);
+                if(binState.getInt(columName)!=state){
+                    query+=format("UPDATE bin_states SET `%s`='%s', `updated_at`=now()  WHERE `id`=%d;",columName,state,binState.getInt("id"));
+                    String unChangedQuery="";
+                    for(String key:binState.keySet()){
+                        if(!(key.equals("id")|| key.equals("updated_at")|| key.equals(columName)))
+                        {
+                            unChangedQuery+=format("`%s`='%s',",key,binState.getInt(key));
+                        }
+                    }
+                    query+= format("INSERT INTO bin_states_history SET %s `%s`='%s', `updated_at`=now();",unChangedQuery,columName,state);
+                }
+            }
+            else{
+                query+= format("INSERT INTO bin_states (`machine_id`, `bin_id`,`%s`) VALUES (%d,%d,%d);",columName,machineId,bin_id,state);
+                query+= format("INSERT INTO bin_states_history (`machine_id`, `bin_id`,`%s`) VALUES (%d,%d,%d);",columName,machineId,bin_id,state);
+            }
         }
         System.out.println("Query: "+query);
         try {
