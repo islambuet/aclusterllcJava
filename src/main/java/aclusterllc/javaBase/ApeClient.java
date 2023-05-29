@@ -11,7 +11,6 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.sql.Connection;
-import java.sql.Statement;
 import java.util.*;
 
 import static java.lang.String.format;
@@ -61,7 +60,7 @@ public class ApeClient implements Runnable {
 	void startPingThread(){
 		pingCounter=0;
 		new Thread(() -> {
-			System.out.println("Ping Start.MachinedId: "+clientInfo.get("machine_id"));
+			//System.out.println("Ping Start.MachinedId: "+clientInfo.get("machine_id"));
 			while (connectedWithApe) {
 				if(pingCounter < 3) {
 					//Send syncMessage MSG_ID = 130
@@ -75,7 +74,7 @@ public class ApeClient implements Runnable {
 						jsonObject.put("messageId",130);
 						jsonObject.put("messageLength",8);
 						jsonObject.put("object",this);
-						notifyToApeMessageObservers(jsonObject,new JSONObject());
+						notifyToApeMessageObservers(130,jsonObject,new JSONObject());
 						sleep(pingDelayMillis);
 					}
 					catch (InterruptedException e) {
@@ -87,7 +86,7 @@ public class ApeClient implements Runnable {
 					break;
 				}
 			}
-			System.out.println("Ping End.MachinedId: "+clientInfo.get("machine_id"));
+			//System.out.println("Ping End.MachinedId: "+clientInfo.get("machine_id"));
 
 		}).start();
 	}
@@ -222,8 +221,12 @@ public class ApeClient implements Runnable {
 	public void addApeMessageObserver(ApeMessageObserver apeMessageObserver){
 		apeMessageObservers.add(apeMessageObserver);
 	}
-	public void notifyToApeMessageObservers(JSONObject jsonMessage,JSONObject info){
-		apeMessageObservers.forEach((apeMessageObserver) -> apeMessageObserver.processApeMessage(jsonMessage,info));
+	public void notifyToApeMessageObservers(int messageId,JSONObject jsonMessage,JSONObject info){
+		for(ApeMessageObserver apeMessageObserver:apeMessageObservers){
+			//System.out.println(apeMessageObserver.getClass().getSimpleName());
+			//limit messageId for others class
+			apeMessageObserver.processApeMessage(jsonMessage,info);
+		}
 	}
 	public void processMessage(JSONObject jsonMessage) {
 		JSONObject info=new JSONObject();
@@ -280,7 +283,7 @@ public class ApeClient implements Runnable {
 //			notifyToApeMessageObservers(jsonMessage);
 //		}
 
-		notifyToApeMessageObservers(jsonMessage,info);
+		notifyToApeMessageObservers(messageId,jsonMessage,info);
 
 	}
 }

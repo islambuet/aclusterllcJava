@@ -72,7 +72,6 @@ public class DatabaseHelper {
         return resultJsonObject;
     }
     public static JSONObject getBinStates(Connection connection,int machineId){
-        System.out.println(machineId);
         JSONObject resultJsonObject = new JSONObject();
         try {
             Statement stmt = connection.createStatement();
