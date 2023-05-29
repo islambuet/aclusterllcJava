@@ -131,13 +131,19 @@ public class ApeClientHelper {
         }
 
     }
-    public static void handleMessage_6_8(Connection connection, JSONObject clientInfo, byte[] dataBytes,int messageId){
+    public static void handleMessage_6_8_10_12(Connection connection, JSONObject clientInfo, byte[] dataBytes,int messageId){
         int machineId=clientInfo.getInt("machine_id");
         JSONObject binStates=DatabaseHelper.getBinStates(connection,clientInfo.getInt("machine_id"));
         JSONObject bins= (JSONObject) ConfigurationHelper.dbBasicInfo.get("bins");
         String columName="pe_blocked";////messageId=6
         if(messageId==8){
             columName="partially_full";
+        }
+        else if(messageId==10){
+            columName="full";
+        }
+        else if(messageId==12){
+            columName="disabled";
         }
         byte []bits=CommonHelper.bitsFromBytes(Arrays.copyOfRange(dataBytes, 4, dataBytes.length),4);//0-3 is number of bins which is equal to bits length
         String query="";
@@ -173,7 +179,7 @@ public class ApeClientHelper {
             logger.error(CommonHelper.getStackTraceString(e));
         }
     }
-    public static void handleMessage_7_9(Connection connection, JSONObject clientInfo, byte[] dataBytes,int messageId){
+    public static void handleMessage_7_9_11_13(Connection connection, JSONObject clientInfo, byte[] dataBytes,int messageId){
         int machineId=clientInfo.getInt("machine_id");
         JSONObject binStates=DatabaseHelper.getBinStates(connection,clientInfo.getInt("machine_id"));
         JSONObject bins= (JSONObject) ConfigurationHelper.dbBasicInfo.get("bins");
@@ -182,6 +188,12 @@ public class ApeClientHelper {
         String columName="pe_blocked";//messageId=7
         if(messageId==9){
             columName="partially_full";
+        }
+        else if(messageId==11){
+            columName="full";
+        }
+        else if(messageId==13){
+            columName="disabled";
         }
         String query="";
         if(bins.has(machineId+"_"+bin_id)){
@@ -204,13 +216,49 @@ public class ApeClientHelper {
                 query+= format("INSERT INTO bin_states_history (`machine_id`, `bin_id`,`%s`) VALUES (%d,%d,%d);",columName,machineId,bin_id,state);
             }
         }
-        System.out.println("Query: "+query);
+        //System.out.println("Query: "+query);
         try {
             DatabaseHelper.runMultipleQuery(connection,query);
         }
         catch (SQLException e) {
             logger.error(CommonHelper.getStackTraceString(e));
         }
+    }
+    public static void handleMessage_14(Connection connection, JSONObject clientInfo, byte[] dataBytes){
+        int machineId=clientInfo.getInt("machine_id");
+        JSONObject devices= (JSONObject) ConfigurationHelper.dbBasicInfo.get("devices");
+        JSONObject deviceStates=DatabaseHelper.getDeviceStates(connection,machineId);
+
+
+        byte []bits=CommonHelper.bitsFromBytes(dataBytes,4);
+        System.out.println(deviceStates);
+
+
+//        String query="";
+//        for(int i=0;i<bits.length;i++){
+//            boolean insertHistory=false;
+//            if(inputsCurrentState.has(machineId+"_"+(i+1))){
+//                JSONObject inputState= (JSONObject) inputsCurrentState.get(machineId+"_"+(i+1));
+//                if(inputState.getInt("state")!=bits[i]){
+//                    query+= format("UPDATE input_states SET `state`=%d,`updated_at`=now() WHERE id=%d;",bits[i],inputState.getInt("id"));
+//                    insertHistory=true;
+//                }
+//            }
+//            else{
+//                query+= format("INSERT INTO input_states (`machine_id`, `input_id`,`state`) VALUES (%d,%d,%d);",machineId,(i+1),bits[i]);
+//                insertHistory=true;
+//            }
+//            if(insertHistory && (inputsInfo.has(machineId+"_"+(i+1))) && (((JSONObject)inputsInfo.get(machineId+"_"+(i+1))).getInt("enable_history")==1)){
+//                query+= format("INSERT INTO input_states_history (`machine_id`, `input_id`,`state`) VALUES (%d,%d,%d);",machineId,(i+1),bits[i]);
+//            }
+//        }
+//        try {
+//            DatabaseHelper.runMultipleQuery(connection,query);
+//        }
+//        catch (SQLException e) {
+//            logger.error(CommonHelper.getStackTraceString(e));
+//        }
+
     }
 
 }

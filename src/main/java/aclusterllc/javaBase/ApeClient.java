@@ -126,7 +126,7 @@ public class ApeClient implements Runnable {
 					ConfigurationHelper.apeClientConnectionStatus.put(clientInfo.getInt("machine_id"), 0);
 					startReconnectThread();
 				}
-				logger.error(CommonHelper.getStackTraceString(e));
+				logger.error(e.toString());
 			}
 		}
 
@@ -254,11 +254,18 @@ public class ApeClient implements Runnable {
 						break;
 					case 6:
 					case 8:
-						ApeClientHelper.handleMessage_6_8(connection,clientInfo,dataBytes,messageId);
+					case 10:
+					case 12:
+						ApeClientHelper.handleMessage_6_8_10_12(connection,clientInfo,dataBytes,messageId);
 						break;
 					case 7:
 					case 9:
-						ApeClientHelper.handleMessage_7_9(connection,clientInfo,dataBytes,messageId);
+					case 11:
+					case 13:
+						ApeClientHelper.handleMessage_7_9_11_13(connection,clientInfo,dataBytes,messageId);
+						break;
+					case 14:
+						ApeClientHelper.handleMessage_14(connection,clientInfo,dataBytes);
 						break;
 
 				}

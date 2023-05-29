@@ -21,11 +21,11 @@ public class DatabaseHelper {
             stmt.close();
         }
     }
-    public static JSONArray getActiveAlarms(Connection connection,int machineId) {
+    public static JSONArray getSelectQueryResults(Connection connection,String query){
         JSONArray resultsJsonArray = new JSONArray();
         try {
             Statement stmt = connection.createStatement();
-            String query = String.format("SELECT *,UNIX_TIMESTAMP(date_active) AS date_active_timestamp FROM active_alarms WHERE machine_id=%d ORDER BY id DESC", machineId);
+
             ResultSet rs = stmt.executeQuery(query);
             ResultSetMetaData rsMetaData = rs.getMetaData();
             int numColumns = rsMetaData.getColumnCount();
@@ -46,11 +46,10 @@ public class DatabaseHelper {
         }
         return resultsJsonArray;
     }
-    public static JSONObject getInputStates(Connection connection,int machineId){
+    public static JSONObject getSelectQueryResults(Connection connection,String query,String[] keyColumns){
         JSONObject resultJsonObject = new JSONObject();
         try {
             Statement stmt = connection.createStatement();
-            String query = String.format("SELECT id,input_id, state FROM input_states WHERE machine_id=%d", machineId);
             ResultSet rs = stmt.executeQuery(query);
             ResultSetMetaData rsMetaData = rs.getMetaData();
             int numColumns = rsMetaData.getColumnCount();
@@ -61,7 +60,17 @@ public class DatabaseHelper {
                     String column_name = rsMetaData.getColumnName(i);
                     item.put(column_name,rs.getString(column_name));
                 }
-                resultJsonObject.put(machineId+"_"+rs.getString("input_id"),item);
+                String key="";
+                for(int i=0;i<keyColumns.length;i++)
+                {
+                    if(i==0){
+                        key=rs.getString(keyColumns[i]);
+                    }
+                    else{
+                        key+=("_"+rs.getString(keyColumns[i]));
+                    }
+                }
+                resultJsonObject.put(key,item);
             }
             rs.close();
             stmt.close();
@@ -71,30 +80,22 @@ public class DatabaseHelper {
         }
         return resultJsonObject;
     }
+    public static JSONArray getActiveAlarms(Connection connection,int machineId) {
+        String query = String.format("SELECT *,UNIX_TIMESTAMP(date_active) AS date_active_timestamp FROM active_alarms WHERE machine_id=%d ORDER BY id DESC", machineId);
+        return  getSelectQueryResults(connection,query);
+    }
+
     public static JSONObject getBinStates(Connection connection,int machineId){
-        JSONObject resultJsonObject = new JSONObject();
-        try {
-            Statement stmt = connection.createStatement();
-            String query = String.format("SELECT * FROM bin_states WHERE machine_id=%d", machineId);
-            ResultSet rs = stmt.executeQuery(query);
-            ResultSetMetaData rsMetaData = rs.getMetaData();
-            int numColumns = rsMetaData.getColumnCount();
-            while (rs.next())
-            {
-                JSONObject item=new JSONObject();
-                for (int i=1; i<=numColumns; i++) {
-                    String column_name = rsMetaData.getColumnName(i);
-                    item.put(column_name,rs.getString(column_name));
-                }
-                resultJsonObject.put(machineId+"_"+rs.getString("bin_id"),item);
-            }
-            rs.close();
-            stmt.close();
-        }
-        catch (Exception e) {
-            logger.error(CommonHelper.getStackTraceString(e));
-        }
-        return resultJsonObject;
+        String query = String.format("SELECT * FROM bin_states WHERE machine_id=%d", machineId);
+        return getSelectQueryResults(connection,query,new String[] { "machine_id", "bin_id"});
+    }
+    public static JSONObject getDeviceStates(Connection connection,int machineId){
+        String query = String.format("SELECT * FROM device_states WHERE machine_id=%d", machineId);
+        return getSelectQueryResults(connection,query,new String[] { "machine_id", "device_id"});
+    }
+    public static JSONObject getInputStates(Connection connection,int machineId){
+        String query = String.format("SELECT * FROM input_states WHERE machine_id=%d", machineId);
+        return getSelectQueryResults(connection,query,new String[] { "machine_id", "input_id"});
     }
 
 }
