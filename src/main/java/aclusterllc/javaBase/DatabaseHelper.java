@@ -42,7 +42,7 @@ public class DatabaseHelper {
             stmt.close();
         }
         catch (Exception e) {
-            logger.error(e.toString());
+            logger.error(CommonHelper.getStackTraceString(e));
         }
         return resultsJsonArray;
     }
@@ -67,7 +67,7 @@ public class DatabaseHelper {
             stmt.close();
         }
         catch (Exception e) {
-            logger.error(e.toString());
+            logger.error(CommonHelper.getStackTraceString(e));
         }
         return resultJsonObject;
     }
@@ -92,7 +92,7 @@ public class DatabaseHelper {
             stmt.close();
         }
         catch (Exception e) {
-            logger.error(e.toString());
+            logger.error(CommonHelper.getStackTraceString(e));
         }
         return resultJsonObject;
     }

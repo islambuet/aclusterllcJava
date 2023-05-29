@@ -14,7 +14,7 @@ import java.util.Arrays;
 import static java.lang.String.format;
 
 public class ApeClientHelper {
-    static Logger logger = LoggerFactory.getLogger(ApeClientHelper.class);
+    static Logger logger = LoggerFactory.getLogger(ApeClient.class);
     public static void handleMessage_1(Connection connection, JSONObject clientInfo, byte[] dataBytes){
         try {
             Statement stmt = connection.createStatement();
@@ -26,7 +26,7 @@ public class ApeClientHelper {
             stmt.close();
         }
         catch (SQLException e) {
-            logger.error(e.toString());
+            logger.error(CommonHelper.getStackTraceString(e));
         }
     }
     public static void handleMessage_2(Connection connection, JSONObject clientInfo, byte[] dataBytes){
@@ -56,7 +56,7 @@ public class ApeClientHelper {
             DatabaseHelper.runMultipleQuery(connection,query);
         }
         catch (SQLException e) {
-            logger.error(e.toString());
+            logger.error(CommonHelper.getStackTraceString(e));
         }
 
     }
@@ -86,7 +86,7 @@ public class ApeClientHelper {
             stmt.close();
         }
         catch (Exception e) {
-            logger.error(e.toString());
+            logger.error(CommonHelper.getStackTraceString(e));
         }
     }
     public static void handleMessage_4_5(Connection connection, JSONObject clientInfo, byte[] dataBytes,int messageId){
@@ -127,7 +127,7 @@ public class ApeClientHelper {
             DatabaseHelper.runMultipleQuery(connection,query);
         }
         catch (SQLException e) {
-            logger.error(e.toString());
+            logger.error(CommonHelper.getStackTraceString(e));
         }
 
     }
@@ -170,7 +170,7 @@ public class ApeClientHelper {
             DatabaseHelper.runMultipleQuery(connection,query);
         }
         catch (SQLException e) {
-            logger.error(e.toString());
+            logger.error(CommonHelper.getStackTraceString(e));
         }
     }
     public static void handleMessage_7_9(Connection connection, JSONObject clientInfo, byte[] dataBytes,int messageId){
@@ -209,7 +209,7 @@ public class ApeClientHelper {
             DatabaseHelper.runMultipleQuery(connection,query);
         }
         catch (SQLException e) {
-            logger.error(e.toString());
+            logger.error(CommonHelper.getStackTraceString(e));
         }
     }
 

@@ -225,11 +225,11 @@ public class ConfigurationHelper {
 
         }
         catch (SQLException e) {
-            logger.error("[Database] Failed To Connect with database.Closing Java Program."+e);
+            logger.error("[Database] Failed To Connect with database.Closing Java Program."+CommonHelper.getStackTraceString(e));
             System.exit(0);
         }
         catch (Exception ex) {
-            logger.error("[Database] Failed To get Data from database.Closing Java Program."+ex);
+            logger.error("[Database] Failed To get Data from database.Closing Java Program."+CommonHelper.getStackTraceString(ex));
             System.exit(0);
         }
     }

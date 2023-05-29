@@ -102,7 +102,7 @@ public class ApeClient implements Runnable {
 				socketChannel.write(buf);
 			}
 			catch (IOException e) {
-				logger.error("[SEND_MESSAGE_TO_APE] "+e);
+				logger.error("[SEND_MESSAGE_TO_APE] "+CommonHelper.getStackTraceString(e));
 			}
 		}
 	}
@@ -126,7 +126,7 @@ public class ApeClient implements Runnable {
 					ConfigurationHelper.apeClientConnectionStatus.put(clientInfo.getInt("machine_id"), 0);
 					startReconnectThread();
 				}
-				logger.error(e.toString());
+				logger.error(CommonHelper.getStackTraceString(e));
 			}
 		}
 
@@ -153,7 +153,7 @@ public class ApeClient implements Runnable {
 				}
 			}
 			catch (IOException e) {
-				logger.error(e.toString());
+				logger.error(CommonHelper.getStackTraceString(e));
 			}
 		}
 	}
@@ -164,7 +164,7 @@ public class ApeClient implements Runnable {
 		try {
 			numRead = connectedApeServer.read(buffer);
 		} catch (IOException e) {
-			logger.error(e.toString());
+			logger.error(CommonHelper.getStackTraceString(e));
 			disconnectConnectedApeServer();
 			return;
 		}
@@ -265,7 +265,7 @@ public class ApeClient implements Runnable {
 				connection.close();
 			}
 			catch (Exception ex){
-				logger.error("[MESSAGE_PROCESS]"+ex);
+				logger.error("[MESSAGE_PROCESS]"+CommonHelper.getStackTraceString(ex));
 			}
 
 

@@ -5,6 +5,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -12,6 +14,11 @@ import java.util.List;
 
 public class CommonHelper {
     static Logger logger = LoggerFactory.getLogger(CommonHelper.class);
+    public static String getStackTraceString(Exception ex){
+        StringWriter errors = new StringWriter();
+        ex.printStackTrace(new PrintWriter(errors));
+        return errors.toString();
+    }
     public static long bytesToLong(byte[] bytes)
     {
         return new BigInteger(bytes).longValue();
@@ -63,7 +70,7 @@ public class CommonHelper {
             }
         }
         catch (Exception ex){
-            logger.error(ex.toString());
+            logger.error(getStackTraceString(ex));
         }
         return bits;
 

@@ -10,7 +10,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import static java.lang.Thread.sleep;
 
 public class ApeClientMessageQueueHandler {
-    Logger logger = LoggerFactory.getLogger(ApeClientMessageQueueHandler.class);
+    Logger logger = LoggerFactory.getLogger(ApeClient.class);
     //List<JSONObject> messageBuffer = new ArrayList<>();
     private final BlockingQueue<JSONObject> messageBuffer = new LinkedBlockingQueue<JSONObject>();
     public void start(){
@@ -30,7 +30,7 @@ public class ApeClientMessageQueueHandler {
         try {
             messageBuffer.put(jsonObject);//put waits if buffer full. add throws exception if buffer full
         } catch (InterruptedException e) {
-            logger.error("Exception adding queue."+e);
+            logger.error("Exception adding queue."+CommonHelper.getStackTraceString(e));
         }
     }
     public void processMessageFromBuffer(){
@@ -41,7 +41,7 @@ public class ApeClientMessageQueueHandler {
                 apeClient.processMessage(jsonMessage);
             }
             catch (InterruptedException e) {
-                logger.error("Error in take."+e);
+                logger.error("Error in take."+CommonHelper.getStackTraceString(e));
             }
         }
     }
