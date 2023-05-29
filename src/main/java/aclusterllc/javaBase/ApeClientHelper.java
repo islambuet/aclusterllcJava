@@ -131,7 +131,7 @@ public class ApeClientHelper {
         }
 
     }
-    public static void handleMessage_6_8_10_12(Connection connection, JSONObject clientInfo, byte[] dataBytes,int messageId){
+    public static void handleMessage_6_8_10_12_17(Connection connection, JSONObject clientInfo, byte[] dataBytes,int messageId){
         int machineId=clientInfo.getInt("machine_id");
         JSONObject binStates=DatabaseHelper.getBinStates(connection,clientInfo.getInt("machine_id"));
         JSONObject bins= (JSONObject) ConfigurationHelper.dbBasicInfo.get("bins");
@@ -144,6 +144,9 @@ public class ApeClientHelper {
         }
         else if(messageId==12){
             columName="disabled";
+        }
+        else if(messageId==17){
+            columName="tray_missing";
         }
         byte []bits=CommonHelper.bitsFromBytes(Arrays.copyOfRange(dataBytes, 4, dataBytes.length),4);//0-3 is number of bins which is equal to bits length
         String query="";
@@ -179,7 +182,7 @@ public class ApeClientHelper {
             logger.error(CommonHelper.getStackTraceString(e));
         }
     }
-    public static void handleMessage_7_9_11_13(Connection connection, JSONObject clientInfo, byte[] dataBytes,int messageId){
+    public static void handleMessage_7_9_11_13_18(Connection connection, JSONObject clientInfo, byte[] dataBytes,int messageId){
         int machineId=clientInfo.getInt("machine_id");
         JSONObject binStates=DatabaseHelper.getBinStates(connection,clientInfo.getInt("machine_id"));
         JSONObject bins= (JSONObject) ConfigurationHelper.dbBasicInfo.get("bins");
@@ -194,6 +197,9 @@ public class ApeClientHelper {
         }
         else if(messageId==13){
             columName="disabled";
+        }
+        else if(messageId==18){
+            columName="tray_missing";
         }
         String query="";
         if(bins.has(machineId+"_"+bin_id)){

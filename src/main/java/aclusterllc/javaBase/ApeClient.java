@@ -256,13 +256,15 @@ public class ApeClient implements Runnable {
 					case 8:
 					case 10:
 					case 12:
-						ApeClientHelper.handleMessage_6_8_10_12(connection,clientInfo,dataBytes,messageId);
+					case 17:
+						ApeClientHelper.handleMessage_6_8_10_12_17(connection,clientInfo,dataBytes,messageId);
 						break;
 					case 7:
 					case 9:
 					case 11:
 					case 13:
-						ApeClientHelper.handleMessage_7_9_11_13(connection,clientInfo,dataBytes,messageId);
+					case 18:
+						ApeClientHelper.handleMessage_7_9_11_13_18(connection,clientInfo,dataBytes,messageId);
 						break;
 					case 14:
 						ApeClientHelper.handleMessage_14(connection,clientInfo,dataBytes);
