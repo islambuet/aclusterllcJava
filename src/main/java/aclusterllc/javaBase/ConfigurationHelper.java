@@ -90,8 +90,14 @@ public class ConfigurationHelper {
 
             query = "SELECT * FROM sensors";
             dbBasicInfo.put("sensors",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "sensor_id"}));
-
-
+            query = "INSERT IGNORE INTO statistics (machine_id) SELECT DISTINCT machine_id FROM machines WHERE NOT EXISTS (SELECT * FROM statistics);" +
+                    "INSERT IGNORE INTO statistics_minutely (machine_id) SELECT DISTINCT machine_id FROM machines WHERE NOT EXISTS (SELECT * FROM statistics_minutely);" +
+                    "INSERT IGNORE INTO statistics_hourly (machine_id) SELECT DISTINCT machine_id FROM machines WHERE NOT EXISTS (SELECT * FROM statistics_hourly);" +
+                    "INSERT IGNORE INTO statistics_counter (machine_id) SELECT DISTINCT machine_id FROM machines WHERE NOT EXISTS (SELECT * FROM statistics_counter);" +
+                    "INSERT IGNORE INTO statistics_bins (machine_id,bin_id) SELECT DISTINCT machine_id,bin_id FROM bins WHERE NOT EXISTS (SELECT * FROM statistics_bins);" +
+                    "INSERT IGNORE INTO statistics_bins_counter (machine_id,bin_id) SELECT DISTINCT machine_id,bin_id FROM bins WHERE NOT EXISTS (SELECT * FROM statistics_bins_counter);" +
+                    "INSERT IGNORE INTO statistics_bins_hourly (machine_id,bin_id) SELECT DISTINCT machine_id,bin_id FROM bins WHERE NOT EXISTS (SELECT * FROM statistics_bins_hourly);";
+            DatabaseHelper.runMultipleQuery(connection,query);
         }
         catch (SQLException e) {
             logger.error("[Database] Failed To Connect with database.Closing Java Program."+CommonHelper.getStackTraceString(e));
