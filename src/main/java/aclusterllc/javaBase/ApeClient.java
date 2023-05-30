@@ -273,6 +273,9 @@ public class ApeClient implements Runnable {
 					case 15:
 						ApeClientHelper.handleMessage_15(connection,clientInfo,dataBytes);
 						break;
+					case 20:
+						info=ApeClientHelper.handleMessage_20(connection,clientInfo,dataBytes);
+						break;
 					case 44:
 						info=ApeClientHelper.handleMessage_44(connection,clientInfo,dataBytes);
 						break;
@@ -298,13 +301,9 @@ public class ApeClient implements Runnable {
 					// code block
 			}
 		}
-
-		//no need to notify for all
-//		List<Integer> notifyMessages=Arrays.asList(1,30);
-//		if(notifyMessages.contains(messageId)){
-//			notifyToApeMessageObservers(jsonMessage);
+//		if(messageId==20){
+//			System.out.println("Outside info: "+ info);
 //		}
-
 		notifyToApeMessageObservers(jsonMessage,info);
 
 	}

@@ -282,6 +282,36 @@ public class ApeClientHelper {
             logger.error(CommonHelper.getStackTraceString(e));
         }
     }
+    public static JSONObject handleMessage_20(Connection connection, JSONObject clientInfo, byte[] dataBytes){
+        int machineId=clientInfo.getInt("machine_id");
+        JSONObject productInfo=new JSONObject();
+        long mailId = CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 0, 4));
+        int length = (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 4, 8));
+        int width = (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 8, 12));
+        int height = (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 12, 16));
+        int weight = (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 16, 20));
+        int rejectCode=dataBytes[20];
+        String queryCheckProduct=format("SELECT * FROM products WHERE machine_id=%d AND mail_id=%d;", machineId, mailId);
+        JSONArray queryCheckProductResult=DatabaseHelper.getSelectQueryResults(connection,queryCheckProduct);
+        if(queryCheckProductResult.length()>0){
+            productInfo=queryCheckProductResult.getJSONObject(0);
+            String query =format("UPDATE products SET length=%d, width=%d, height=%d, weight=%d, reject_code=%d, dimension_at=NOW() WHERE id=%d;",
+                     length, width, height, weight, rejectCode, productInfo.getInt("id"));
+            try {
+                DatabaseHelper.runMultipleQuery(connection,query);
+            }
+            catch (SQLException e) {
+                logger.error(CommonHelper.getStackTraceString(e));
+                productInfo=new JSONObject();//removing info for unSuccess
+            }
+        }
+        else{
+            logger.warn("[PRODUCT][20] Product not found found. MailId="+mailId);
+        }
+        return productInfo;
+
+
+    }
     public static JSONObject handleMessage_44(Connection connection, JSONObject clientInfo, byte[] dataBytes){
         int machineId=clientInfo.getInt("machine_id");
         JSONObject productInfo=new JSONObject();
@@ -310,7 +340,7 @@ public class ApeClientHelper {
                 ResultSet rs = stmt.getGeneratedKeys();
                 if(rs.next())
                 {
-                    productInfo.put("productId",rs.getInt(1));
+                    productInfo.put("productId",rs.getLong(1));
                 }
                 connection.commit();
                 connection.setAutoCommit(true);
