@@ -5,6 +5,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -290,13 +291,18 @@ public class ApeClientHelper {
         int width = (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 8, 12));
         int height = (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 12, 16));
         int weight = (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 16, 20));
-        int rejectCode=dataBytes[20];
+        int reject_code=dataBytes[20];
         String queryCheckProduct=format("SELECT * FROM products WHERE machine_id=%d AND mail_id=%d;", machineId, mailId);
         JSONArray queryCheckProductResult=DatabaseHelper.getSelectQueryResults(connection,queryCheckProduct);
         if(queryCheckProductResult.length()>0){
             productInfo=queryCheckProductResult.getJSONObject(0);
+            productInfo.put("length",length);
+            productInfo.put("width",width);
+            productInfo.put("height",height);
+            productInfo.put("weight",length);
+            productInfo.put("reject_code",reject_code);
             String query =format("UPDATE products SET length=%d, width=%d, height=%d, weight=%d, reject_code=%d, dimension_at=NOW() WHERE id=%d;",
-                     length, width, height, weight, rejectCode, productInfo.getInt("id"));
+                     length, width, height, weight, reject_code, productInfo.getInt("id"));
             try {
                 DatabaseHelper.runMultipleQuery(connection,query);
             }
@@ -311,6 +317,105 @@ public class ApeClientHelper {
         return productInfo;
 
 
+    }
+    public static JSONObject handleMessage_21(Connection connection, JSONObject clientInfo, byte[] dataBytes){
+        int machineId=clientInfo.getInt("machine_id");
+        JSONObject productInfo=new JSONObject();
+        long mailId = CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 0, 4));
+        int number_of_results = (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 4, 6));
+
+        String queryBarcode="";
+        int bytePos=6;
+        JSONObject barCodeInfo=new JSONObject();
+        for(int i=1;(i<4)&&(i<=number_of_results);i++)
+        {
+            barCodeInfo.put("barcode"+i+"_type",dataBytes[bytePos]);
+            queryBarcode+=format("`barcode%s_type`='%s',",i,dataBytes[bytePos]);
+            bytePos++;
+            int barcodeLength = (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, bytePos, bytePos+2));
+            bytePos+=2;
+            String barcode=new String(Arrays.copyOfRange(dataBytes, bytePos, bytePos+barcodeLength), StandardCharsets.UTF_8);
+            //barcode = barcode.replaceAll("\\P{Print}", "");
+            barCodeInfo.put("barcode"+i+"_string",barcode);
+            queryBarcode+=format("`barcode%s_string`='%s',",i,barcode);
+            bytePos+=barcodeLength;
+        }
+
+        int valid_read = 1, no_read = 0, multiple_read = 0, no_code=0;//if number_of_results=1
+        if(number_of_results==1){
+            String barcode1_string=barCodeInfo.getString("barcode1_string");
+            switch (barcode1_string) {
+                case "??????????":
+                    no_read = 1;
+                    valid_read = 0;
+                    break;
+                case "9999999999":
+                    multiple_read = 1;
+                    valid_read = 0;
+                    break;
+                case "0000000000":
+                    no_code = 1;
+                    valid_read = 0;
+                    break;
+            }
+        }
+        else{
+            valid_read = 0;
+            if(number_of_results == 0) {
+                no_code = 1;
+            }
+            else {
+                multiple_read = 1;
+            }
+        }
+        int productId=0;
+        String query="";
+        String queryCreateNew="";
+        String queryCheckProduct=format("SELECT * FROM products WHERE machine_id=%d AND mail_id=%d;", machineId, mailId);
+        JSONArray queryCheckProductResult=DatabaseHelper.getSelectQueryResults(connection,queryCheckProduct);
+
+        if(queryCheckProductResult.length()>0){
+            productInfo=queryCheckProductResult.getJSONObject(0);
+            productId=productInfo.getInt("id");
+            query+=format("UPDATE products SET %s`number_of_results`='%s', `barcode_at`=now()  WHERE `id`=%d;",queryBarcode,number_of_results,productId);
+        }
+        else{
+            productInfo.put("mail_id",mailId);
+            productInfo.put("machine_id",machineId);
+            queryCreateNew+= format("INSERT INTO products SET %s`number_of_results`='%s',`machine_id`='%s',`mail_id`='%s', `barcode_at`=now();"
+                    ,queryBarcode,number_of_results,machineId,mailId);
+        }
+        query += format("UPDATE statistics SET total_read=total_read+1, no_read=no_read+%d, no_code=no_code+%d, multiple_read=multiple_read+%d, valid=valid+%d WHERE machine_id=%d ORDER BY id DESC LIMIT 1;",no_read,no_code,multiple_read,valid_read,machineId);
+        query += format("UPDATE statistics_minutely SET total_read=total_read+1, no_read=no_read+%d, no_code=no_code+%d, multiple_read=multiple_read+%d, valid=valid+%d WHERE machine_id=%d ORDER BY id DESC LIMIT 1;",no_read,no_code,multiple_read,valid_read,machineId);
+        query += format("UPDATE statistics_hourly SET total_read=total_read+1, no_read=no_read+%d, no_code=no_code+%d, multiple_read=multiple_read+%d, valid=valid+%d WHERE machine_id=%d ORDER BY id DESC LIMIT 1;",no_read,no_code,multiple_read,valid_read,machineId);
+        query += format("UPDATE statistics_counter SET total_read=total_read+1, no_read=no_read+%d, no_code=no_code+%d, multiple_read=multiple_read+%d, valid=valid+%d WHERE machine_id=%d ORDER BY id DESC LIMIT 1;",no_read,no_code,multiple_read,valid_read,machineId);
+
+        try {
+            connection.setAutoCommit(false);
+            Statement stmt = connection.createStatement();
+            if(queryCreateNew.length()>0){
+                stmt.executeUpdate(queryCreateNew,Statement.RETURN_GENERATED_KEYS);
+                ResultSet rs = stmt.getGeneratedKeys();
+                if(rs.next())
+                {
+                    productInfo.put("id",rs.getLong(1));
+                }
+                rs.close();
+            }
+            stmt.execute(query);
+            connection.commit();
+            connection.setAutoCommit(true);
+
+            stmt.close();
+        }
+        catch (Exception ex){
+            logger.error("[PRODUCT][21] "+CommonHelper.getStackTraceString(ex));
+        }
+        productInfo.put("number_of_results",number_of_results);
+        for(String key:barCodeInfo.keySet()){
+            productInfo.put(key,barCodeInfo.get(key));
+        }
+        return productInfo;
     }
     public static JSONObject handleMessage_44(Connection connection, JSONObject clientInfo, byte[] dataBytes){
         int machineId=clientInfo.getInt("machine_id");
@@ -340,7 +445,7 @@ public class ApeClientHelper {
                 ResultSet rs = stmt.getGeneratedKeys();
                 if(rs.next())
                 {
-                    productInfo.put("productId",rs.getLong(1));
+                    productInfo.put("id",rs.getLong(1));
                 }
                 connection.commit();
                 connection.setAutoCommit(true);
@@ -354,7 +459,7 @@ public class ApeClientHelper {
         else{
             logger.info("[PRODUCT][44] Product not inserted. sensorId="+sensorId+". sensorStatus="+sensorStatus+". MailId="+mailId);
         }
-        productInfo.put("mailId",mailId);
+        productInfo.put("mail_id",mailId);
         return productInfo;
     }
 

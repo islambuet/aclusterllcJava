@@ -135,7 +135,7 @@ public class ApeClient implements Runnable {
 		connectedWithApe=true;
 		//Send syncMessage MSG_ID = 116
 		sendBytes(new byte[]{0, 0, 0, 116, 0, 0, 0, 8});
-		startPingThread();
+		//startPingThread();
 		while (connectedWithApe){
 			try {
 				//System.out.println("waiting for connect or message");
@@ -276,6 +276,9 @@ public class ApeClient implements Runnable {
 					case 20:
 						info=ApeClientHelper.handleMessage_20(connection,clientInfo,dataBytes);
 						break;
+					case 21:
+						info=ApeClientHelper.handleMessage_21(connection,clientInfo,dataBytes);
+						break;
 					case 44:
 						info=ApeClientHelper.handleMessage_44(connection,clientInfo,dataBytes);
 						break;
@@ -301,9 +304,9 @@ public class ApeClient implements Runnable {
 					// code block
 			}
 		}
-//		if(messageId==20){
-//			System.out.println("Outside info: "+ info);
-//		}
+		if(messageId==20|| messageId==21){
+			System.out.println(messageId+" : "+ info);
+		}
 		notifyToApeMessageObservers(jsonMessage,info);
 
 	}
