@@ -88,6 +88,10 @@ public class ConfigurationHelper {
             query = "SELECT * FROM scs";
             dbBasicInfo.put("scs",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "value"}));
 
+            query = "SELECT * FROM sensors";
+            dbBasicInfo.put("sensors",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "sensor_id"}));
+
+
         }
         catch (SQLException e) {
             logger.error("[Database] Failed To Connect with database.Closing Java Program."+CommonHelper.getStackTraceString(e));
