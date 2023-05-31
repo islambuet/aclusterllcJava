@@ -293,6 +293,9 @@ public class ApeClient implements Runnable {
 					case 44:
 						info=ApeClientHelper.handleMessage_44(connection,clientInfo,dataBytes);
 						break;
+					case 45:
+						//nothing doing. Receiving only event Id
+						break;
 
 				}
 				connection.close();

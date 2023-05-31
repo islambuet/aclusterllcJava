@@ -60,6 +60,8 @@ public class ConfigurationHelper {
 
             query = "SELECT * FROM devices";
             dbBasicInfo.put("devices",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "device_id"}));
+            query = "SELECT * FROM events";
+            dbBasicInfo.put("events",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "event_id"}));
 
             query = "SELECT * FROM inputs";
             dbBasicInfo.put("inputs",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "input_id"}));
