@@ -279,6 +279,9 @@ public class ApeClient implements Runnable {
 					case 21:
 						info=ApeClientHelper.handleMessage_21(connection,clientInfo,dataBytes);
 						break;
+					case 22:
+						info=ApeClientHelper.handleMessage_22(connection,clientInfo,dataBytes);
+						break;
 					case 44:
 						info=ApeClientHelper.handleMessage_44(connection,clientInfo,dataBytes);
 						break;
@@ -304,7 +307,7 @@ public class ApeClient implements Runnable {
 					// code block
 			}
 		}
-		if(messageId==20|| messageId==21){
+		if(messageId==20|| messageId==21|| messageId==22){
 			System.out.println(messageId+" : "+ info);
 		}
 		notifyToApeMessageObservers(jsonMessage,info);

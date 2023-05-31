@@ -10,7 +10,9 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static java.lang.String.format;
 
@@ -368,7 +370,7 @@ public class ApeClientHelper {
                 multiple_read = 1;
             }
         }
-        int productId=0;
+
         String query="";
         String queryCreateNew="";
         String queryCheckProduct=format("SELECT * FROM products WHERE machine_id=%d AND mail_id=%d;", machineId, mailId);
@@ -376,14 +378,14 @@ public class ApeClientHelper {
 
         if(queryCheckProductResult.length()>0){
             productInfo=queryCheckProductResult.getJSONObject(0);
-            productId=productInfo.getInt("id");
-            query+=format("UPDATE products SET %s`number_of_results`='%s', `barcode_at`=now()  WHERE `id`=%d;",queryBarcode,number_of_results,productId);
+            query+=format("UPDATE products SET %s`number_of_results`='%s', `barcode_at`=now()  WHERE `id`=%d;",queryBarcode,number_of_results,productInfo.getInt("id"));
         }
         else{
             productInfo.put("mail_id",mailId);
             productInfo.put("machine_id",machineId);
             queryCreateNew+= format("INSERT INTO products SET %s`number_of_results`='%s',`machine_id`='%s',`mail_id`='%s', `barcode_at`=now();"
                     ,queryBarcode,number_of_results,machineId,mailId);
+            logger.warn("[PRODUCT][21] Product not found found. Creating New. MailId="+mailId);
         }
         query += format("UPDATE statistics SET total_read=total_read+1, no_read=no_read+%d, no_code=no_code+%d, multiple_read=multiple_read+%d, valid=valid+%d WHERE machine_id=%d ORDER BY id DESC LIMIT 1;",no_read,no_code,multiple_read,valid_read,machineId);
         query += format("UPDATE statistics_minutely SET total_read=total_read+1, no_read=no_read+%d, no_code=no_code+%d, multiple_read=multiple_read+%d, valid=valid+%d WHERE machine_id=%d ORDER BY id DESC LIMIT 1;",no_read,no_code,multiple_read,valid_read,machineId);
@@ -415,6 +417,73 @@ public class ApeClientHelper {
         for(String key:barCodeInfo.keySet()){
             productInfo.put(key,barCodeInfo.get(key));
         }
+        return productInfo;
+    }
+    public static JSONObject handleMessage_22(Connection connection, JSONObject clientInfo, byte[] dataBytes){
+        JSONObject productInfo=new JSONObject();
+
+        int machine_id=clientInfo.getInt("machine_id");
+        long mail_id = CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 0, 4));
+        int destination = (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 4, 6));
+        int destination_alternate = (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 6, 8));
+        int destination_final = (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 8, 10));
+        int reason=dataBytes[10];
+
+        String query="";
+        String queryCheckProduct=format("SELECT * FROM products WHERE machine_id=%d AND mail_id=%d;", machine_id, mail_id);
+        JSONArray queryCheckProductResult=DatabaseHelper.getSelectQueryResults(connection,queryCheckProduct);
+
+        if(queryCheckProductResult.length()>0){
+            productInfo=queryCheckProductResult.getJSONObject(0);
+        }
+        else{
+            query = format("INSERT INTO products (`machine_id`, `mail_id`) VALUES (%d, %d);",machine_id, mail_id);
+            query += format("UPDATE %s SET total_read=total_read+1,no_code=no_code+1 WHERE machine_id=%d ORDER BY id DESC LIMIT 1;","statistics",machine_id);
+            query += format("UPDATE %s SET total_read=total_read+1,no_code=no_code+1 WHERE machine_id=%d ORDER BY id DESC LIMIT 1;","statistics_hourly",machine_id);
+            query += format("UPDATE %s SET total_read=total_read+1,no_code=no_code+1 WHERE machine_id=%d ORDER BY id DESC LIMIT 1;","statistics_minutely",machine_id);
+            query += format("UPDATE %s SET total_read=total_read+1,no_code=no_code+1 WHERE machine_id=%d ORDER BY id DESC LIMIT 1;","statistics_counter",machine_id);
+            logger.warn("[PRODUCT][22] Product not found found. Creating New and Updating Statistics. MailId="+mail_id);
+            try {
+                DatabaseHelper.runMultipleQuery(connection,query);
+                JSONArray queryCheckProductResultNew=DatabaseHelper.getSelectQueryResults(connection,queryCheckProduct);
+
+                if(queryCheckProductResultNew.length()>0){
+                    productInfo=queryCheckProductResultNew.getJSONObject(0);
+                }
+                else{
+                    logger.error("[PRODUCT][22] Failed to create new Product.MailId="+mail_id);
+                    return new JSONObject();
+                }
+            }
+            catch (SQLException e) {
+                logger.error(CommonHelper.getStackTraceString(e));
+                return new JSONObject();
+
+            }
+        }
+
+        //Process confirm
+        productInfo.put("destination",destination);
+        productInfo.put("destination_alternate",destination_alternate);
+        productInfo.put("destination_final",destination_final);
+        productInfo.put("reason",reason);
+        String valueFromProductsQuery="";
+        for(String key:productInfo.keySet()){
+                valueFromProductsQuery+=format("`%s`='%s',",key.equals("id")?"product_id":key,productInfo.get(key));
+        }
+        query= format("INSERT INTO products_history SET %s `confirmed_at`=now();",valueFromProductsQuery);
+        query+=format("DELETE FROM products WHERE id=%d;", productInfo.getInt("id"));
+
+        //process short codes
+        try {
+            DatabaseHelper.runMultipleQuery(connection,query);
+        }
+        catch (SQLException e) {
+            logger.error(CommonHelper.getStackTraceString(e));
+            return  new JSONObject();
+        }
+
+
         return productInfo;
     }
     public static JSONObject handleMessage_44(Connection connection, JSONObject clientInfo, byte[] dataBytes){
