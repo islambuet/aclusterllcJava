@@ -735,5 +735,21 @@ public class ApeClientHelper {
             ConfigurationHelper.motorsCurrentSpeed.put(machineId+"_"+(i+1),(int)  CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 4+i*2, 6+i*2)));
         }
     }
+    public static void handleMessage_53(Connection connection, JSONObject clientInfo, byte[] dataBytes){
+        int machineId=clientInfo.getInt("machine_id");
+        byte []bits=CommonHelper.bitsFromBytes(dataBytes,4);
+        String query = "INSERT INTO output_states (`machine_id`, `output_id`, `state`,`updated_at`) VALUES ";
+        List<String> valuesList = new ArrayList<>();
+        for(int i=0;i<bits.length;i++){
+            valuesList.add(format("(%d, %d, %d,NOW())", machineId, i+1, bits[i]));
+        }
+        query+=(String.join(", ", valuesList)+" ON DUPLICATE KEY UPDATE state=VALUES(state),updated_at=VALUES(updated_at)");
+        try {
+            DatabaseHelper.runMultipleQuery(connection,query);
+        }
+        catch (SQLException e) {
+            logger.error(CommonHelper.getStackTraceString(e));
+        }
+    }
 
 }

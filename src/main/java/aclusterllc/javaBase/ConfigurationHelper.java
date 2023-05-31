@@ -146,6 +146,8 @@ public class ConfigurationHelper {
         APE_MESSAGE_ID_NAME.put("48", "PieceInducted Message");
         APE_MESSAGE_ID_NAME.put("49", "Motor Speed Message");
         APE_MESSAGE_ID_NAME.put("50", "EStop Message");
+        APE_MESSAGE_ID_NAME.put("51", "Machine Stopped Message");
+        APE_MESSAGE_ID_NAME.put("52", "Belt Status Message");
         APE_MESSAGE_ID_NAME.put("53", "Outputs Message");
         APE_MESSAGE_ID_NAME.put("54", "Param Value Message");
         APE_MESSAGE_ID_NAME.put("120", "SetMode Message");

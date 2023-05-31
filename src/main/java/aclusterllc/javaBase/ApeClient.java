@@ -317,6 +317,9 @@ public class ApeClient implements Runnable {
 					case 52:
 						//nothing doing. Receiving only speed. TODO For 360
 						break;
+					case 53:
+						ApeClientHelper.handleMessage_53(connection,clientInfo,dataBytes);
+						break;
 
 				}
 				connection.close();
