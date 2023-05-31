@@ -751,5 +751,18 @@ public class ApeClientHelper {
             logger.error(CommonHelper.getStackTraceString(e));
         }
     }
+    public static void handleMessage_54(Connection connection, JSONObject clientInfo, byte[] dataBytes){
+        int machine_id=clientInfo.getInt("machine_id");
+        int param_id = (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 0, 4));
+        int value = (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 4, 8));
+
+        String query = format("UPDATE parameters SET value=%d,`updated_at`=NOW() WHERE machine_id=%d AND param_id=%d;",value,machine_id,param_id);
+        try {
+            DatabaseHelper.runMultipleQuery(connection,query);
+        }
+        catch (SQLException e) {
+            logger.error(CommonHelper.getStackTraceString(e));
+        }
+    }
 
 }
