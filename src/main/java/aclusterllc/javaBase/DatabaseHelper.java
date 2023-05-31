@@ -84,10 +84,13 @@ public class DatabaseHelper {
         String query = String.format("SELECT *,UNIX_TIMESTAMP(date_active) AS date_active_timestamp FROM active_alarms WHERE machine_id=%d ORDER BY id DESC", machineId);
         return  getSelectQueryResults(connection,query);
     }
-
     public static JSONObject getBinStates(Connection connection,int machineId){
         String query = String.format("SELECT * FROM bin_states WHERE machine_id=%d", machineId);
         return getSelectQueryResults(connection,query,new String[] { "machine_id", "bin_id"});
+    }
+    public static JSONObject getConveyorStates(Connection connection,int machineId){
+        String query = String.format("SELECT * FROM conveyor_states WHERE machine_id=%d", machineId);
+        return getSelectQueryResults(connection,query,new String[] { "machine_id", "conveyor_id"});
     }
     public static JSONObject getDeviceStates(Connection connection,int machineId){
         String query = String.format("SELECT * FROM device_states WHERE machine_id=%d", machineId);

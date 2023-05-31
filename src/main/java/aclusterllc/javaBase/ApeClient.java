@@ -284,6 +284,12 @@ public class ApeClient implements Runnable {
 					case 22:
 						info=ApeClientHelper.handleMessage_22(connection,clientInfo,dataBytes);
 						break;
+					case 42:
+						ApeClientHelper.handleMessage_42(connection,clientInfo,dataBytes);
+						break;
+					case 43:
+						ApeClientHelper.handleMessage_43(connection,clientInfo,dataBytes);
+						break;
 					case 44:
 						info=ApeClientHelper.handleMessage_44(connection,clientInfo,dataBytes);
 						break;

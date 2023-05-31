@@ -585,5 +585,65 @@ public class ApeClientHelper {
         productInfo.put("mail_id",mailId);
         return productInfo;
     }
+    public static void handleMessage_42(Connection connection, JSONObject clientInfo, byte[] dataBytes){
+        int machineId=clientInfo.getInt("machine_id");
+        JSONObject conveyorStates=DatabaseHelper.getConveyorStates(connection,clientInfo.getInt("machine_id"));
+        JSONObject conveyors= (JSONObject) ConfigurationHelper.dbBasicInfo.get("conveyors");
+
+        byte[] stateDataBytes = Arrays.copyOfRange(dataBytes, 4, dataBytes.length);
+
+        String query="";
+        for(int i=0;i<stateDataBytes.length;i++){
+            int conveyor_id=(i+1);
+            if(conveyors.has(machineId+"_"+conveyor_id)){
+                if(conveyorStates.has(machineId+"_"+conveyor_id)){
+                    JSONObject conveyorState= (JSONObject) conveyorStates.get(machineId+"_"+conveyor_id);
+                    if(conveyorState.getInt("state")!=stateDataBytes[i]){
+                        query+=format("UPDATE conveyor_states SET `state`='%s', `updated_at`=now()  WHERE `id`=%d;",stateDataBytes[i],conveyorState.getInt("id"));
+                        query+= format("INSERT INTO conveyor_states_history (`machine_id`, `conveyor_id`,`state`) VALUES (%d,%d,%d);",machineId,conveyor_id,stateDataBytes[i]);
+                    }
+                }
+                else{
+                    query+= format("INSERT INTO conveyor_states (`machine_id`, `conveyor_id`,`state`) VALUES (%d,%d,%d);",machineId,conveyor_id,stateDataBytes[i]);
+                    query+= format("INSERT INTO conveyor_states_history (`machine_id`, `conveyor_id`,`state`) VALUES (%d,%d,%d);",machineId,conveyor_id,stateDataBytes[i]);
+                }
+            }
+        }
+        try {
+            DatabaseHelper.runMultipleQuery(connection,query);
+        }
+        catch (SQLException e) {
+            logger.error(CommonHelper.getStackTraceString(e));
+        }
+    }
+    public static void handleMessage_43(Connection connection, JSONObject clientInfo, byte[] dataBytes){
+        int machineId=clientInfo.getInt("machine_id");
+        JSONObject conveyorStates=DatabaseHelper.getConveyorStates(connection,clientInfo.getInt("machine_id"));
+        JSONObject conveyors= (JSONObject) ConfigurationHelper.dbBasicInfo.get("conveyors");
+        int conveyor_id = (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 0, 2));
+        int state=dataBytes[2];
+        String query="";
+        if(conveyors.has(machineId+"_"+conveyor_id)){
+            if(conveyorStates.has(machineId+"_"+conveyor_id)){
+                JSONObject conveyorState= (JSONObject) conveyorStates.get(machineId+"_"+conveyor_id);
+                if(conveyorState.getInt("state")!=state){
+                    query+=format("UPDATE conveyor_states SET `state`='%s', `updated_at`=now()  WHERE `id`=%d;",state,conveyorState.getInt("id"));
+                    query+= format("INSERT INTO conveyor_states_history (`machine_id`, `conveyor_id`,`state`) VALUES (%d,%d,%d);",machineId,conveyor_id,state);
+                }
+            }
+            else{
+                query+= format("INSERT INTO conveyor_states (`machine_id`, `conveyor_id`,`state`) VALUES (%d,%d,%d);",machineId,conveyor_id,state);
+                query+= format("INSERT INTO conveyor_states_history (`machine_id`, `conveyor_id`,`state`) VALUES (%d,%d,%d);",machineId,conveyor_id,state);
+            }
+        }
+
+        //System.out.println("Query: "+query);
+        try {
+            DatabaseHelper.runMultipleQuery(connection,query);
+        }
+        catch (SQLException e) {
+            logger.error(CommonHelper.getStackTraceString(e));
+        }
+    }
 
 }
