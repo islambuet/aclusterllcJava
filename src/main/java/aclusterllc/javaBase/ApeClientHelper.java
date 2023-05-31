@@ -475,6 +475,55 @@ public class ApeClientHelper {
         query+=format("DELETE FROM products WHERE id=%d;", productInfo.getInt("id"));
 
         //process short codes
+        JSONObject destBin=null;
+        JSONObject destFinalBin=null;
+        JSONObject bins=ConfigurationHelper.dbBasicInfo.getJSONObject("bins");
+        for(String key:bins.keySet()){
+            JSONObject bin= bins.getJSONObject(key);
+            if(bin.getInt("sort_manager_id")==destination){
+                destBin=bin;
+            }
+            if(bin.getInt("sort_manager_id")==destination_final){
+                destFinalBin=bin;
+            }
+        }
+        if(destBin!= null && destFinalBin!=null){
+            List<Integer> possibleReasons=new ArrayList<>(Arrays.asList(0, 1, 3, 4, 5,6,7,8,9,10,12,14,16,17,18,21));
+            if(possibleReasons.contains(reason)) {
+                String scColumn = "sc" + reason;
+                String recircUpdate="";
+                String rejectUpdate="";
+
+                //statistics
+                if(destFinalBin.getInt("recirc_bin")==1){
+                    recircUpdate=" ,recirc=recirc+1";
+                }
+                else if(destFinalBin.getInt("reject_bin")==1){
+                    rejectUpdate=" ,reject=reject+1";
+                }
+
+                query += format("UPDATE %s SET %s=%s+1%s%s WHERE machine_id=%d ORDER BY id DESC LIMIT 1;","statistics",scColumn,scColumn,recircUpdate,rejectUpdate,machine_id);
+                query += format("UPDATE %s SET %s=%s+1%s%s WHERE machine_id=%d ORDER BY id DESC LIMIT 1;","statistics_counter",scColumn,scColumn,recircUpdate,rejectUpdate,machine_id);
+                query += format("UPDATE %s SET %s=%s+1%s%s WHERE machine_id=%d ORDER BY id DESC LIMIT 1;","statistics_hourly",scColumn,scColumn,recircUpdate,rejectUpdate,machine_id);
+                query += format("UPDATE %s SET %s=%s+1%s%s WHERE machine_id=%d ORDER BY id DESC LIMIT 1;","statistics_minutely",scColumn,scColumn,recircUpdate,rejectUpdate,machine_id);
+
+                //bin statistics
+                //update short code for all condition destFinalBin
+                {
+                    query += format("UPDATE %s SET %s=%s+1 WHERE machine_id=%d AND bin_id=%d ORDER BY id DESC LIMIT 1;", "statistics_bins", scColumn, scColumn, machine_id, destFinalBin.getInt("bin_id"));
+                    query += format("UPDATE %s SET %s=%s+1 WHERE machine_id=%d AND bin_id=%d ORDER BY id DESC LIMIT 1;", "statistics_bins_counter", scColumn, scColumn, machine_id, destFinalBin.getInt("bin_id"));
+                    query += format("UPDATE %s SET %s=%s+1 WHERE machine_id=%d AND bin_id=%d ORDER BY id DESC LIMIT 1;", "statistics_bins_hourly", scColumn, scColumn, machine_id, destFinalBin.getInt("bin_id"));
+                }
+                if((destBin.getInt("reject_bin")!=1)&&(destBin!=destFinalBin))
+                {
+                    query += format("UPDATE %s SET %s=%s+1%s%s WHERE machine_id=%d AND bin_id=%d ORDER BY id DESC LIMIT 1;", "statistics_bins", scColumn, scColumn,recircUpdate,rejectUpdate, machine_id, destBin.getInt("bin_id"));
+                    query += format("UPDATE %s SET %s=%s+1%s%s WHERE machine_id=%d AND bin_id=%d ORDER BY id DESC LIMIT 1;", "statistics_bins_counter", scColumn, scColumn,recircUpdate,rejectUpdate, machine_id, destBin.getInt("bin_id"));
+                    query += format("UPDATE %s SET %s=%s+1%s%s WHERE machine_id=%d AND bin_id=%d ORDER BY id DESC LIMIT 1;", "statistics_bins_hourly", scColumn, scColumn,recircUpdate,rejectUpdate, machine_id, destBin.getInt("bin_id"));
+                }
+
+            }
+        }
+        //sc code finished
         try {
             DatabaseHelper.runMultipleQuery(connection,query);
         }
@@ -482,7 +531,6 @@ public class ApeClientHelper {
             logger.error(CommonHelper.getStackTraceString(e));
             return  new JSONObject();
         }
-
 
         return productInfo;
     }
