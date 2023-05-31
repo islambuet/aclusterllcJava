@@ -294,7 +294,7 @@ public class ApeClient implements Runnable {
 						info=ApeClientHelper.handleMessage_44(connection,clientInfo,dataBytes);
 						break;
 					case 45:
-						//nothing doing. Receiving only event Id
+						//nothing doing. Receiving only event Id TODO For 360
 						break;
 					case 46:
 						ApeClientHelper.handleMessage_46(connection,clientInfo,dataBytes);
@@ -304,6 +304,18 @@ public class ApeClient implements Runnable {
 						break;
 					case 48:
 						ApeClientHelper.handleMessage_48(connection,clientInfo,dataBytes);
+						break;
+					case 49:
+						ApeClientHelper.handleMessage_49(connection,clientInfo,dataBytes);
+						break;
+					case 50:
+						//nothing doing. Receiving only estop state and location. TODO For 360
+						break;
+					case 51:
+						//nothing doing. Receiving only reason. TODO For 360
+						break;
+					case 52:
+						//nothing doing. Receiving only speed. TODO For 360
 						break;
 
 				}

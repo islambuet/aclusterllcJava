@@ -728,5 +728,12 @@ public class ApeClientHelper {
             logger.error("Invalid LaneId: "+laneId);
         }
     }
+    public static void handleMessage_49(Connection connection, JSONObject clientInfo, byte[] dataBytes){
+        int machineId=clientInfo.getInt("machine_id");
+        int motorCount = (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 0, 4));
+        for(int i=0;i<motorCount;i++){
+            ConfigurationHelper.motorsCurrentSpeed.put(machineId+"_"+(i+1),(int)  CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 4+i*2, 6+i*2)));
+        }
+    }
 
 }
