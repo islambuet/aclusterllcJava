@@ -540,51 +540,6 @@ public class ApeClientHelper {
 
         return productInfo;
     }
-    public static JSONObject handleMessage_44(Connection connection, JSONObject clientInfo, byte[] dataBytes){
-        int machineId=clientInfo.getInt("machine_id");
-        JSONObject productInfo=new JSONObject();
-
-        long mailId = CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 0, 4));
-        long sensorId = CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 4, 8));
-        int sensorStatus=dataBytes[8];
-        if((sensorId == 1) && (sensorStatus == 1)) {
-            String query="";
-            String queryOldProduct=format("SELECT * FROM products WHERE machine_id=%d AND mail_id=%d;", machineId, mailId);
-            JSONArray previousProductInfo=DatabaseHelper.getSelectQueryResults(connection,queryOldProduct);
-            if(previousProductInfo.length()>0){
-                int oldProductId=previousProductInfo.getJSONObject(0).getInt("id");
-                logger.info("[PRODUCT][44] Duplicate Product found. MailId="+mailId+" productId="+oldProductId);
-                query+=format("INSERT INTO products_overwritten SELECT * FROM products WHERE id=%d;", oldProductId);
-                query+=format("DELETE FROM products WHERE id=%d;", oldProductId);
-            }
-            try {
-                connection.setAutoCommit(false);
-                Statement stmt = connection.createStatement();
-                if(query.length()>0){
-                    stmt.execute(query);
-                }
-                query = format("INSERT INTO products (`machine_id`, `mail_id`) VALUES (%d, %d);",machineId, mailId);
-                stmt.executeUpdate(query,Statement.RETURN_GENERATED_KEYS);
-                ResultSet rs = stmt.getGeneratedKeys();
-                if(rs.next())
-                {
-                    productInfo.put("id",rs.getLong(1));
-                }
-                connection.commit();
-                connection.setAutoCommit(true);
-                rs.close();
-                stmt.close();
-            }
-            catch (Exception ex){
-                logger.error("[PRODUCT][44] "+CommonHelper.getStackTraceString(ex));
-            }
-        }
-        else{
-            logger.info("[PRODUCT][44] Product not inserted. sensorId="+sensorId+". sensorStatus="+sensorStatus+". MailId="+mailId);
-        }
-        productInfo.put("mail_id",mailId);
-        return productInfo;
-    }
     public static void handleMessage_42(Connection connection, JSONObject clientInfo, byte[] dataBytes){
         int machineId=clientInfo.getInt("machine_id");
         JSONObject conveyorStates=DatabaseHelper.getConveyorStates(connection,clientInfo.getInt("machine_id"));
@@ -634,6 +589,112 @@ public class ApeClientHelper {
             else{
                 query+= format("INSERT INTO conveyor_states (`machine_id`, `conveyor_id`,`state`) VALUES (%d,%d,%d);",machineId,conveyor_id,state);
                 query+= format("INSERT INTO conveyor_states_history (`machine_id`, `conveyor_id`,`state`) VALUES (%d,%d,%d);",machineId,conveyor_id,state);
+            }
+        }
+
+        //System.out.println("Query: "+query);
+        try {
+            DatabaseHelper.runMultipleQuery(connection,query);
+        }
+        catch (SQLException e) {
+            logger.error(CommonHelper.getStackTraceString(e));
+        }
+    }
+    public static JSONObject handleMessage_44(Connection connection, JSONObject clientInfo, byte[] dataBytes){
+        int machineId=clientInfo.getInt("machine_id");
+        JSONObject productInfo=new JSONObject();
+
+        long mailId = CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 0, 4));
+        long sensorId = CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 4, 8));
+        int sensorStatus=dataBytes[8];
+        if((sensorId == 1) && (sensorStatus == 1)) {
+            String query="";
+            String queryOldProduct=format("SELECT * FROM products WHERE machine_id=%d AND mail_id=%d;", machineId, mailId);
+            JSONArray previousProductInfo=DatabaseHelper.getSelectQueryResults(connection,queryOldProduct);
+            if(previousProductInfo.length()>0){
+                int oldProductId=previousProductInfo.getJSONObject(0).getInt("id");
+                logger.info("[PRODUCT][44] Duplicate Product found. MailId="+mailId+" productId="+oldProductId);
+                query+=format("INSERT INTO products_overwritten SELECT * FROM products WHERE id=%d;", oldProductId);
+                query+=format("DELETE FROM products WHERE id=%d;", oldProductId);
+            }
+            try {
+                connection.setAutoCommit(false);
+                Statement stmt = connection.createStatement();
+                if(query.length()>0){
+                    stmt.execute(query);
+                }
+                query = format("INSERT INTO products (`machine_id`, `mail_id`) VALUES (%d, %d);",machineId, mailId);
+                stmt.executeUpdate(query,Statement.RETURN_GENERATED_KEYS);
+                ResultSet rs = stmt.getGeneratedKeys();
+                if(rs.next())
+                {
+                    productInfo.put("id",rs.getLong(1));
+                }
+                connection.commit();
+                connection.setAutoCommit(true);
+                rs.close();
+                stmt.close();
+            }
+            catch (Exception ex){
+                logger.error("[PRODUCT][44] "+CommonHelper.getStackTraceString(ex));
+            }
+        }
+        else{
+            logger.info("[PRODUCT][44] Product not inserted. sensorId="+sensorId+". sensorStatus="+sensorStatus+". MailId="+mailId);
+        }
+        productInfo.put("mail_id",mailId);
+        return productInfo;
+    }
+    public static void handleMessage_46(Connection connection, JSONObject clientInfo, byte[] dataBytes){
+        int machineId=clientInfo.getInt("machine_id");
+        JSONObject inductStates=DatabaseHelper.getInductStates(connection,clientInfo.getInt("machine_id"));
+        JSONObject inducts= (JSONObject) ConfigurationHelper.dbBasicInfo.get("inducts");
+
+
+        byte[] stateDataBytes = Arrays.copyOfRange(dataBytes, 4, dataBytes.length);
+
+        String query="";
+        for(int i=0;i<stateDataBytes.length;i++){
+            int induct_id=(i+1);
+            if(inducts.has(machineId+"_"+induct_id)){
+                if(inductStates.has(machineId+"_"+induct_id)){
+                    JSONObject inductState= (JSONObject) inductStates.get(machineId+"_"+induct_id);
+                    if(inductState.getInt("state")!=stateDataBytes[i]){
+                        query+=format("UPDATE induct_states SET `state`='%s', `updated_at`=now()  WHERE `id`=%d;",stateDataBytes[i],inductState.getInt("id"));
+                        query+= format("INSERT INTO induct_states_history (`machine_id`, `induct_id`,`state`) VALUES (%d,%d,%d);",machineId,induct_id,stateDataBytes[i]);
+                    }
+                }
+                else{
+                    query+= format("INSERT INTO induct_states (`machine_id`, `induct_id`,`state`) VALUES (%d,%d,%d);",machineId,induct_id,stateDataBytes[i]);
+                    query+= format("INSERT INTO induct_states_history (`machine_id`, `induct_id`,`state`) VALUES (%d,%d,%d);",machineId,induct_id,stateDataBytes[i]);
+                }
+            }
+        }
+        try {
+            DatabaseHelper.runMultipleQuery(connection,query);
+        }
+        catch (SQLException e) {
+            logger.error(CommonHelper.getStackTraceString(e));
+        }
+    }
+    public static void handleMessage_47(Connection connection, JSONObject clientInfo, byte[] dataBytes){
+        int machineId=clientInfo.getInt("machine_id");
+        JSONObject inductStates=DatabaseHelper.getInductStates(connection,clientInfo.getInt("machine_id"));
+        JSONObject inducts= (JSONObject) ConfigurationHelper.dbBasicInfo.get("inducts");
+        int induct_id = (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 0, 2));
+        int state=dataBytes[2];
+        String query="";
+        if(inducts.has(machineId+"_"+induct_id)){
+            if(inductStates.has(machineId+"_"+induct_id)){
+                JSONObject inductState= (JSONObject) inductStates.get(machineId+"_"+induct_id);
+                if(inductState.getInt("state")!=state){
+                    query+=format("UPDATE induct_states SET `state`='%s', `updated_at`=now()  WHERE `id`=%d;",state,inductState.getInt("id"));
+                    query+= format("INSERT INTO induct_states_history (`machine_id`, `induct_id`,`state`) VALUES (%d,%d,%d);",machineId,induct_id,state);
+                }
+            }
+            else{
+                query+= format("INSERT INTO induct_states (`machine_id`, `induct_id`,`state`) VALUES (%d,%d,%d);",machineId,induct_id,state);
+                query+= format("INSERT INTO induct_states_history (`machine_id`, `induct_id`,`state`) VALUES (%d,%d,%d);",machineId,induct_id,state);
             }
         }
 

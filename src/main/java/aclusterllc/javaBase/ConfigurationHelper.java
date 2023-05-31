@@ -62,6 +62,8 @@ public class ConfigurationHelper {
             dbBasicInfo.put("devices",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "device_id"}));
             query = "SELECT * FROM events";
             dbBasicInfo.put("events",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "event_id"}));
+            query = "SELECT * FROM inducts";
+            dbBasicInfo.put("inducts",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "induct_id"}));
 
             query = "SELECT * FROM inputs";
             dbBasicInfo.put("inputs",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "input_id"}));
@@ -74,8 +76,6 @@ public class ConfigurationHelper {
                     countersCurrentValue.put(machineId+"_"+(i+1),0);
                 }
             }
-
-
 
             query = "SELECT * FROM motors";
             JSONObject motors=DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "motor_id"});
