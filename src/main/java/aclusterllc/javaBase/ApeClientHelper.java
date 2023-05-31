@@ -706,5 +706,27 @@ public class ApeClientHelper {
             logger.error(CommonHelper.getStackTraceString(e));
         }
     }
+    public static void handleMessage_48(Connection connection, JSONObject clientInfo, byte[] dataBytes){
+        int machineId=clientInfo.getInt("machine_id");
+        int laneId = (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 0, 4));
+        List<Integer> inducts =new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7));
+
+        if(inducts.contains(laneId)) {
+            String columnName = "i" + laneId;
+            String query= format("UPDATE statistics SET %s=%s+1 WHERE machine_id=%d ORDER BY id DESC LIMIT 1;",columnName,columnName,machineId);
+            query+= format("UPDATE statistics_minutely SET %s=%s+1 WHERE machine_id=%d ORDER BY id DESC LIMIT 1;",columnName,columnName,machineId);
+            query+= format("UPDATE statistics_hourly SET %s=%s+1 WHERE machine_id=%d ORDER BY id DESC LIMIT 1;",columnName,columnName,machineId);
+            query+= format("UPDATE statistics_counter SET %s=%s+1 WHERE machine_id=%d ORDER BY id DESC LIMIT 1;",columnName,columnName,machineId);
+            try {
+                DatabaseHelper.runMultipleQuery(connection,query);
+            }
+            catch (SQLException e) {
+                logger.error(CommonHelper.getStackTraceString(e));
+            }
+        }
+        else {
+            logger.error("Invalid LaneId: "+laneId);
+        }
+    }
 
 }
