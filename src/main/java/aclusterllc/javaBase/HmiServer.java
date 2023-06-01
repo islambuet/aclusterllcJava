@@ -1,5 +1,6 @@
 package aclusterllc.javaBase;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -27,6 +28,18 @@ public class HmiServer implements Runnable {
     ConcurrentHashMap<SocketChannel, JSONObject> connectedHmiClientList = new ConcurrentHashMap<>();
     Logger logger = LoggerFactory.getLogger(HmiServer.class);
     public HmiServer() {
+    }
+    public void sendMessage(SocketChannel connectedHmiClient, String msg) {
+        String startTag="<begin>";
+        String endTag="</begin>";
+        msg=startTag+msg+endTag;
+        ByteBuffer buf = ByteBuffer.wrap(msg.getBytes());
+        try {
+            connectedHmiClient.write(buf);
+        }
+        catch (IOException ex) {
+            logger.error(CommonHelper.getStackTraceString(ex));
+        }
     }
     public void start(){
         logger.info("HMI Server Started");
@@ -168,10 +181,27 @@ public class HmiServer implements Runnable {
     }
     public void processReceivedMessageFromConnectedHmiClient(SocketChannel connectedHmiClient,JSONObject jsonObject){
         try {
+            JSONObject response=new JSONObject();
             System.out.println(jsonObject);
-//            String request = jsonObject.getString("request");
-//            String params = jsonObject.getString("params");
-//            String requestData = jsonObject.getString("requestData");
+            String request = jsonObject.getString("request");
+            JSONObject params = jsonObject.getJSONObject("params");
+            JSONArray requestData = jsonObject.getJSONArray("requestData");
+
+            response.put("request",request);
+            response.put("params",params);
+
+            int machine_id=0;
+            if(params.has("machine_id")){machine_id=params.getInt("machine_id");}
+
+            if(requestData.length()>0){
+
+            }
+            else if (request.equals("basic_info")) {
+                response.put("data",ConfigurationHelper.dbBasicInfo);
+                sendMessage(connectedHmiClient,response.toString());
+            }
+            //notify
+
         }
         catch (Exception ex){
             ex.printStackTrace();
