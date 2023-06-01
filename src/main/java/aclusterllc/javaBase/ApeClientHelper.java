@@ -764,5 +764,21 @@ public class ApeClientHelper {
             logger.error(CommonHelper.getStackTraceString(e));
         }
     }
+    public static void handleMessage_55(Connection connection, ApeClient apeClient, byte[] dataBytes){
+        int machine_id=apeClient.clientInfo.getInt("machine_id");
+        JSONObject parameterValues=DatabaseHelper.getParameterValues(connection,machine_id);
+        for(String key:parameterValues.keySet()){
+            JSONObject row=parameterValues.getJSONObject(key);
+            int paramId = row.getInt("param_id");
+            int value = row.getInt("value");
+            //messageId==115
+            byte[] messageBytes= new byte[]{
+                    0, 0, 0, 115, 0, 0, 0, 20,0,0,0,0,
+                    (byte) (paramId >> 24),(byte) (paramId >> 16),(byte) (paramId >> 8),(byte) (paramId),
+                    (byte) (value >> 24),(byte) (value >> 16),(byte) (value >> 8),(byte) (value)
+            };
+            apeClient.sendBytes(messageBytes);
+        }
+    }
 
 }

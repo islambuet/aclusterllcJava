@@ -104,5 +104,9 @@ public class DatabaseHelper {
         String query = String.format("SELECT * FROM input_states WHERE machine_id=%d", machineId);
         return getSelectQueryResults(connection,query,new String[] { "machine_id", "input_id"});
     }
+    public static JSONObject getParameterValues(Connection connection,int machineId){
+        String query = String.format("SELECT machine_id,param_id,value FROM parameters WHERE machine_id=%d", machineId);
+        return getSelectQueryResults(connection,query,new String[] { "machine_id", "param_id"});
+    }
 
 }

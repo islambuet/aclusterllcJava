@@ -150,6 +150,7 @@ public class ConfigurationHelper {
         APE_MESSAGE_ID_NAME.put("52", "Belt Status Message");
         APE_MESSAGE_ID_NAME.put("53", "Outputs Message");
         APE_MESSAGE_ID_NAME.put("54", "Param Value Message");
+        APE_MESSAGE_ID_NAME.put("55", "RequestParams Message");
         APE_MESSAGE_ID_NAME.put("120", "SetMode Message");
         APE_MESSAGE_ID_NAME.put("101", "Request Inputs State Message");
         APE_MESSAGE_ID_NAME.put("102", "Request Errors Message");
