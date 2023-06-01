@@ -152,7 +152,6 @@ public class ConfigurationHelper {
         APE_MESSAGE_ID_NAME.put("54", "Param Value Message");
         APE_MESSAGE_ID_NAME.put("55", "RequestParams Message");
         APE_MESSAGE_ID_NAME.put("56", "Counter Message");
-        APE_MESSAGE_ID_NAME.put("120", "SetMode Message");
         APE_MESSAGE_ID_NAME.put("101", "Request Inputs State Message");
         APE_MESSAGE_ID_NAME.put("102", "Request Errors Message");
         APE_MESSAGE_ID_NAME.put("103", "Request Jams Message");
@@ -166,7 +165,12 @@ public class ConfigurationHelper {
         APE_MESSAGE_ID_NAME.put("112", "Request ConveyorState Message");
         APE_MESSAGE_ID_NAME.put("113", "Request TrayMissing Message");
         APE_MESSAGE_ID_NAME.put("114", "Request InductLineState Message");
+        APE_MESSAGE_ID_NAME.put("115", "Set Param Value Message");
         APE_MESSAGE_ID_NAME.put("116", "Sync Request");
+        APE_MESSAGE_ID_NAME.put("120", "SetMode Message");
+        APE_MESSAGE_ID_NAME.put("123", "Device Command Message");
+        APE_MESSAGE_ID_NAME.put("124", "SortMailpiece Message");
+        APE_MESSAGE_ID_NAME.put("125", "Authorization To Start Message");
         APE_MESSAGE_ID_NAME.put("130", "Ping Request");
         systemConstants.put("APE_MESSAGE_ID_NAME",APE_MESSAGE_ID_NAME);
 

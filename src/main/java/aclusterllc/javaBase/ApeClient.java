@@ -239,6 +239,7 @@ public class ApeClient implements Runnable {
 				//byte[] timestampBytes = Arrays.copyOfRange(bodyBytes, 0, 4);
 				byte[] dataBytes = Arrays.copyOfRange(bodyBytes, 4, bodyBytes.length);
 				Connection connection=ConfigurationHelper.getConnection();
+				//Server >> Client Messages
 				switch (messageId){
 					case 1:
 						ApeClientHelper.handleMessage_1(connection,clientInfo,dataBytes);
@@ -329,10 +330,15 @@ public class ApeClient implements Runnable {
 					case 56:
 						ApeClientHelper.handleMessage_56(connection,clientInfo,dataBytes);
 						break;
-					//Client >> Server
-					//MSG_ID = 115
-
 				}
+				//Client >> Server
+				//MSG_ID = 115
+				//MSG_ID = 111 Missing doc
+				//MSG_ID = 115
+				//MSG_ID = 120
+				//MSG_ID = 123
+				//MSG_ID = 124
+				//MSG_ID = 125
 				connection.close();
 			}
 			catch (Exception ex){
@@ -352,6 +358,22 @@ public class ApeClient implements Runnable {
 				default:
 					// code block
 			}
+			//Client >> Server
+			//MSG_ID = 101
+			//MSG_ID = 102
+			//MSG_ID = 103
+			//MSG_ID = 103
+			//MSG_ID = 105
+			//MSG_ID = 106
+			//MSG_ID = 107
+			//MSG_ID = 108
+			//MSG_ID = 109
+			//MSG_ID = 110
+			//MSG_ID = 112
+			//MSG_ID = 113
+			//MSG_ID = 114
+			//MSG_ID = 116
+			//MSG_ID = 130
 		}
 		if(messageId==20|| messageId==21|| messageId==22){
 			System.out.println(messageId+" : "+ info);
