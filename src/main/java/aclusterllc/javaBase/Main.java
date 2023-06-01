@@ -17,6 +17,7 @@ public class Main {
         ApeClientMessageQueueHandler apeClientMessageQueueHandler=new ApeClientMessageQueueHandler();
         apeClientMessageQueueHandler.start();
         MainGui mainGui = new MainGui();
+        HmiServer hmiServer=new HmiServer();
 
         JSONObject machines=(JSONObject)ConfigurationHelper.dbBasicInfo.get("machines");
         for (String key : machines.keySet()) {
@@ -26,6 +27,7 @@ public class Main {
         }
 
         mainGui.startGui();
+        hmiServer.start();
         System.out.println("Main");
         logger.info("Started");
     }
