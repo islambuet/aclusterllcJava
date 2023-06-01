@@ -15,6 +15,7 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -182,6 +183,7 @@ public class HmiServer implements Runnable {
     public void processReceivedMessageFromConnectedHmiClient(SocketChannel connectedHmiClient,JSONObject jsonObject){
         try {
             JSONObject response=new JSONObject();
+            Connection connection=ConfigurationHelper.getConnection();
             System.out.println(jsonObject);
             String request = jsonObject.getString("request");
             JSONObject params = jsonObject.getJSONObject("params");
@@ -195,13 +197,29 @@ public class HmiServer implements Runnable {
 
             if(requestData.length()>0){
 
+                JSONObject responseData=new JSONObject();
+                for(int i=0;i<requestData.length();i++){
+                    JSONObject requestFunction=requestData.getJSONObject(i);
+                    String requestFunctionName=requestFunction.getString("name");
+                    if(requestFunctionName.equals("machine_mode")){
+                        responseData.put(requestFunctionName,DatabaseHelper.getMachineMode(connection,machine_id));
+                    }
+                    else if(requestFunctionName.equals("disconnected_device_counter")){
+                        responseData.put(requestFunctionName,DatabaseHelper.getDisconnectedDeviceCounter(connection,machine_id));
+                    }
+                    else if(requestFunctionName.equals("active_alarms")){
+                        responseData.put(requestFunctionName,DatabaseHelper.getActiveAlarms(connection,machine_id));
+                    }
+                }
+                response.put("data",responseData);
+                sendMessage(connectedHmiClient,response.toString());
             }
-            else if (request.equals("getBasicInfo")) {
+            else if (request.equals("basic_info")) {
                 response.put("data",ConfigurationHelper.dbBasicInfo);
                 sendMessage(connectedHmiClient,response.toString());
             }
             //notify
-
+            connection.close();
         }
         catch (Exception ex){
             ex.printStackTrace();
