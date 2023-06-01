@@ -196,7 +196,7 @@ public class HmiServer implements Runnable {
             if(requestData.length()>0){
 
             }
-            else if (request.equals("basic_info")) {
+            else if (request.equals("getBasicInfo")) {
                 response.put("data",ConfigurationHelper.dbBasicInfo);
                 sendMessage(connectedHmiClient,response.toString());
             }
