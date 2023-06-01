@@ -780,5 +780,12 @@ public class ApeClientHelper {
             apeClient.sendBytes(messageBytes);
         }
     }
+    public static void handleMessage_56(Connection connection, JSONObject clientInfo, byte[] dataBytes){
+        int machine_id=clientInfo.getInt("machine_id");
+        int counterCount = (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 0, 4));
+        for(int i=0;i<counterCount;i++){
+            ConfigurationHelper.countersCurrentValue.put(machine_id+"_"+(i+1),(int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 4+i*4, 8+i*4)));
+        }
+    }
 
 }
