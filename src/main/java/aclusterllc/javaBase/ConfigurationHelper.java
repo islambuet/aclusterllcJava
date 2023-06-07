@@ -28,7 +28,7 @@ public class ConfigurationHelper {
 
 
 
-    public static void loadConfig(){
+    public static void loadIniConfig(){
      //loading file config
         try {
             configIni.load(new FileInputStream("./resources/config.ini"));
@@ -39,76 +39,7 @@ public class ConfigurationHelper {
             System.exit(0);
         }
         setSystemConstants();
-        createDatabaseConnection();
-        try {
-            Connection connection=getConnection();
-            Statement stmt = connection.createStatement();
-            String query = "SELECT * FROM alarms";
-            dbBasicInfo.put("alarms",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "alarm_id", "alarm_type"}));
 
-            query = "SELECT * FROM bins";
-            dbBasicInfo.put("bins",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "bin_id"}));
-
-            query = "SELECT * FROM boards";
-            dbBasicInfo.put("boards",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "board_id"}));
-
-            query = "SELECT * FROM board_ios";
-            dbBasicInfo.put("board_ios",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "id"}));
-
-            query = "SELECT * FROM conveyors";
-            dbBasicInfo.put("conveyors",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "conveyor_id"}));
-
-            query = "SELECT * FROM devices";
-            dbBasicInfo.put("devices",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "device_id"}));
-            query = "SELECT * FROM events";
-            dbBasicInfo.put("events",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "event_id"}));
-            query = "SELECT * FROM inducts";
-            dbBasicInfo.put("inducts",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "induct_id"}));
-
-            query = "SELECT * FROM inputs";
-            dbBasicInfo.put("inputs",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "input_id"}));
-
-            query = "SELECT * FROM machines";
-            JSONObject machines=DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id"});
-            dbBasicInfo.put("machines",machines);
-            for (String machineId : machines.keySet()) {
-                for(int i=0;i<32;i++){
-                    countersCurrentValue.put(machineId+"_"+(i+1),0);
-                }
-            }
-
-            query = "SELECT * FROM motors";
-            JSONObject motors=DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "motor_id"});
-            dbBasicInfo.put("motors",motors);
-            for (String motorKey : motors.keySet()) {
-                motorsCurrentSpeed.put(motorKey,0);
-            }
-
-            query = "SELECT * FROM parameters";
-            dbBasicInfo.put("parameters",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "param_id"}));
-
-            query = "SELECT * FROM scs";
-            dbBasicInfo.put("scs",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "value"}));
-
-            query = "SELECT * FROM sensors";
-            dbBasicInfo.put("sensors",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "sensor_id"}));
-            query = "INSERT IGNORE INTO statistics (machine_id) SELECT DISTINCT machine_id FROM machines WHERE NOT EXISTS (SELECT * FROM statistics);" +
-                    "INSERT IGNORE INTO statistics_minutely (machine_id) SELECT DISTINCT machine_id FROM machines WHERE NOT EXISTS (SELECT * FROM statistics_minutely);" +
-                    "INSERT IGNORE INTO statistics_hourly (machine_id) SELECT DISTINCT machine_id FROM machines WHERE NOT EXISTS (SELECT * FROM statistics_hourly);" +
-                    "INSERT IGNORE INTO statistics_counter (machine_id) SELECT DISTINCT machine_id FROM machines WHERE NOT EXISTS (SELECT * FROM statistics_counter);" +
-                    "INSERT IGNORE INTO statistics_bins (machine_id,bin_id) SELECT DISTINCT machine_id,bin_id FROM bins WHERE NOT EXISTS (SELECT * FROM statistics_bins);" +
-                    "INSERT IGNORE INTO statistics_bins_counter (machine_id,bin_id) SELECT DISTINCT machine_id,bin_id FROM bins WHERE NOT EXISTS (SELECT * FROM statistics_bins_counter);" +
-                    "INSERT IGNORE INTO statistics_bins_hourly (machine_id,bin_id) SELECT DISTINCT machine_id,bin_id FROM bins WHERE NOT EXISTS (SELECT * FROM statistics_bins_hourly);";
-            DatabaseHelper.runMultipleQuery(connection,query);
-        }
-        catch (SQLException e) {
-            logger.error("[Database] Failed To Connect with database.Closing Java Program."+CommonHelper.getStackTraceString(e));
-            System.exit(0);
-        }
-        catch (Exception ex) {
-            logger.error("[Database] Failed To get Data from database.Closing Java Program."+CommonHelper.getStackTraceString(ex));
-            System.exit(0);
-        }
     }
     public static void setSystemConstants(){
         JSONObject APE_MESSAGE_ID_NAME  = new JSONObject();
@@ -186,6 +117,78 @@ public class ConfigurationHelper {
         SYSTEM_MODES.put("0", "Auto");
         SYSTEM_MODES.put("1", "Manual");
         systemConstants.put("SYSTEM_MODES",SYSTEM_MODES);
+    }
+    public static void loadDatabaseConfig(){
+        createDatabaseConnection();
+        try {
+            Connection connection=getConnection();
+            Statement stmt = connection.createStatement();
+            String query = "SELECT * FROM alarms";
+            dbBasicInfo.put("alarms",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "alarm_id", "alarm_type"}));
+
+            query = "SELECT * FROM bins";
+            dbBasicInfo.put("bins",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "bin_id"}));
+
+            query = "SELECT * FROM boards";
+            dbBasicInfo.put("boards",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "board_id"}));
+
+            query = "SELECT * FROM board_ios";
+            dbBasicInfo.put("board_ios",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "id"}));
+
+            query = "SELECT * FROM conveyors";
+            dbBasicInfo.put("conveyors",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "conveyor_id"}));
+
+            query = "SELECT * FROM devices";
+            dbBasicInfo.put("devices",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "device_id"}));
+            query = "SELECT * FROM events";
+            dbBasicInfo.put("events",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "event_id"}));
+            query = "SELECT * FROM inducts";
+            dbBasicInfo.put("inducts",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "induct_id"}));
+
+            query = "SELECT * FROM inputs";
+            dbBasicInfo.put("inputs",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "input_id"}));
+
+            query = "SELECT * FROM machines";
+            JSONObject machines=DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id"});
+            dbBasicInfo.put("machines",machines);
+            for (String machineId : machines.keySet()) {
+                for(int i=0;i<32;i++){
+                    countersCurrentValue.put(machineId+"_"+(i+1),0);
+                }
+            }
+
+            query = "SELECT * FROM motors";
+            JSONObject motors=DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "motor_id"});
+            dbBasicInfo.put("motors",motors);
+            for (String motorKey : motors.keySet()) {
+                motorsCurrentSpeed.put(motorKey,0);
+            }
+
+            query = "SELECT * FROM parameters";
+            dbBasicInfo.put("parameters",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "param_id"}));
+
+            query = "SELECT * FROM scs";
+            dbBasicInfo.put("scs",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "value"}));
+
+            query = "SELECT * FROM sensors";
+            dbBasicInfo.put("sensors",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "sensor_id"}));
+            query = "INSERT IGNORE INTO statistics (machine_id) SELECT DISTINCT machine_id FROM machines WHERE NOT EXISTS (SELECT * FROM statistics);" +
+                    "INSERT IGNORE INTO statistics_minutely (machine_id) SELECT DISTINCT machine_id FROM machines WHERE NOT EXISTS (SELECT * FROM statistics_minutely);" +
+                    "INSERT IGNORE INTO statistics_hourly (machine_id) SELECT DISTINCT machine_id FROM machines WHERE NOT EXISTS (SELECT * FROM statistics_hourly);" +
+                    "INSERT IGNORE INTO statistics_counter (machine_id) SELECT DISTINCT machine_id FROM machines WHERE NOT EXISTS (SELECT * FROM statistics_counter);" +
+                    "INSERT IGNORE INTO statistics_bins (machine_id,bin_id) SELECT DISTINCT machine_id,bin_id FROM bins WHERE NOT EXISTS (SELECT * FROM statistics_bins);" +
+                    "INSERT IGNORE INTO statistics_bins_counter (machine_id,bin_id) SELECT DISTINCT machine_id,bin_id FROM bins WHERE NOT EXISTS (SELECT * FROM statistics_bins_counter);" +
+                    "INSERT IGNORE INTO statistics_bins_hourly (machine_id,bin_id) SELECT DISTINCT machine_id,bin_id FROM bins WHERE NOT EXISTS (SELECT * FROM statistics_bins_hourly);";
+            DatabaseHelper.runMultipleQuery(connection,query);
+        }
+        catch (SQLException e) {
+            logger.error("[Database] Failed To Connect with database.Closing Java Program."+CommonHelper.getStackTraceString(e));
+            System.exit(0);
+        }
+        catch (Exception ex) {
+            logger.error("[Database] Failed To get Data from database.Closing Java Program."+CommonHelper.getStackTraceString(ex));
+            System.exit(0);
+        }
     }
     public static void createDatabaseConnection() {
         try {

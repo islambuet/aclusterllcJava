@@ -20,7 +20,7 @@ import static java.lang.String.format;
 
 public class Test {
     public static void main(String[] args) {
-        ConfigurationHelper.loadConfig();
+        ConfigurationHelper.loadIniConfig();
         int start=5;
         String query="";
 
@@ -51,7 +51,8 @@ public class Test {
         }
     }
     public static void main3(String[] args) {
-        ConfigurationHelper.loadConfig();
+        ConfigurationHelper.loadIniConfig();
+        ConfigurationHelper.setSystemConstants();
         JSONObject x= (JSONObject) ConfigurationHelper.systemConstants.get("APE_MESSAGE_ID_NAME");
         int messageId=1;
         System.out.println(x.get(messageId+""));

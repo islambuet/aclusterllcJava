@@ -183,7 +183,7 @@ public class HmiServer implements Runnable {
     public void processReceivedMessageFromConnectedHmiClient(SocketChannel connectedHmiClient,JSONObject jsonObject){
         try {
             JSONObject response=new JSONObject();
-            Connection connection=ConfigurationHelper.getConnection();
+
             System.out.println(jsonObject);
             String request = jsonObject.getString("request");
             JSONObject params = jsonObject.getJSONObject("params");
@@ -196,7 +196,7 @@ public class HmiServer implements Runnable {
             if(params.has("machine_id")){machine_id=params.getInt("machine_id");}
 
             if(requestData.length()>0){
-
+                Connection connection=ConfigurationHelper.getConnection();
                 JSONObject responseData=new JSONObject();
                 for(int i=0;i<requestData.length();i++){
                     JSONObject requestFunction=requestData.getJSONObject(i);
@@ -211,6 +211,7 @@ public class HmiServer implements Runnable {
                         responseData.put(requestFunctionName,DatabaseHelper.getActiveAlarms(connection,machine_id));
                     }
                 }
+                connection.close();
                 response.put("data",responseData);
                 sendMessage(connectedHmiClient,response.toString());
             }
@@ -218,8 +219,9 @@ public class HmiServer implements Runnable {
                 response.put("data",ConfigurationHelper.dbBasicInfo);
                 sendMessage(connectedHmiClient,response.toString());
             }
+
             //notify
-            connection.close();
+
         }
         catch (Exception ex){
             ex.printStackTrace();
