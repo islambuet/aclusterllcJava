@@ -43,6 +43,7 @@ public class Main {
         for (String key : machines.keySet()) {
             ApeClient apeClient=new ApeClient((JSONObject) machines.get(key),apeClientMessageQueueHandler);
             apeClient.addApeMessageObserver(mainGui);
+            hmiServer.addHmiMessageObserver(apeClient);
             apeClient.start();
         }
 

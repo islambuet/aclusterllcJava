@@ -17,8 +17,10 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class HmiServer implements Runnable {
@@ -28,6 +30,7 @@ public class HmiServer implements Runnable {
     ByteBuffer buffer = ByteBuffer.allocate(10240000);
     ConcurrentHashMap<SocketChannel, JSONObject> connectedHmiClientList = new ConcurrentHashMap<>();
     Logger logger = LoggerFactory.getLogger(HmiServer.class);
+    final List<HmiMessageObserver> hmiMessageObservers = new ArrayList<>();
     public HmiServer() {
     }
     public void sendMessage(SocketChannel connectedHmiClient, String msg) {
@@ -60,7 +63,6 @@ public class HmiServer implements Runnable {
     public void run() {
         while (true) {
             try {
-                System.out.println("waiting for event");
                 selector.select();
                 Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
                 while (iterator.hasNext()) {
@@ -70,11 +72,9 @@ public class HmiServer implements Runnable {
                         continue;
                     }
                     if(key.isAcceptable()){
-                        System.out.println("in accept");
                         registerConnectedHmiClient(key);
                     }
                     else if (key.isReadable()) {
-                        System.out.println("in Read");
                         readReceivedDataFromConnectedHmiClient(key);
                     }
                 }
@@ -139,6 +139,17 @@ public class HmiServer implements Runnable {
             this.disconnectConnectedHmiClient(key);
         }
     }
+    public void addHmiMessageObserver(HmiMessageObserver hmiMessageObserver){
+        hmiMessageObservers.add(hmiMessageObserver);
+    }
+    public void notifyToHmiMessageObservers(JSONObject jsonMessage,JSONObject info){
+        //int messageId=jsonMessage.getInt("messageId");
+        for(HmiMessageObserver hmiMessageObserver:hmiMessageObservers){
+            //System.out.println(apeMessageObserver.getClass().getSimpleName());
+            //limit messageId for others class
+            hmiMessageObserver.processHmiMessage(jsonMessage,info);
+        }
+    }
     public void processReceivedDataFromConnectedHmiClient(SocketChannel connectedHmiClient,byte[] b){
         JSONObject connectedHmiClientInfo= connectedHmiClientList.get(connectedHmiClient);
         if(connectedHmiClientInfo==null){
@@ -184,7 +195,7 @@ public class HmiServer implements Runnable {
         try {
             JSONObject response=new JSONObject();
 
-            System.out.println(jsonObject);
+            //System.out.println(jsonObject);
             String request = jsonObject.getString("request");
             JSONObject params = jsonObject.getJSONObject("params");
             JSONArray requestData = jsonObject.getJSONArray("requestData");
@@ -218,6 +229,10 @@ public class HmiServer implements Runnable {
             else if (request.equals("basic_info")) {
                 response.put("data",ConfigurationHelper.dbBasicInfo);
                 sendMessage(connectedHmiClient,response.toString());
+            }
+            else if (request.equals("forward_ape_message")) {
+                JSONObject info=new JSONObject();
+                notifyToHmiMessageObservers(jsonObject,info);
             }
 
             //notify

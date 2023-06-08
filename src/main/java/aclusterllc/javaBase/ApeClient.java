@@ -17,7 +17,7 @@ import static java.lang.String.format;
 import static java.lang.Thread.sleep;
 
 
-public class ApeClient implements Runnable {
+public class ApeClient implements Runnable, HmiMessageObserver {
 	private Thread worker;
 
 	private Thread pingThread;
@@ -380,5 +380,42 @@ public class ApeClient implements Runnable {
 		}
 		notifyToApeMessageObservers(jsonMessage,info);
 
+	}
+
+	@Override
+	public void processHmiMessage(JSONObject jsonMessage, JSONObject info) {
+		try {
+			String request = jsonMessage.getString("request");
+			JSONObject params = jsonMessage.getJSONObject("params");
+			int machine_id=0;
+			if(params.has("machine_id")){machine_id=params.getInt("machine_id");}
+			if (request.equals("forward_ape_message")) {
+				if(machine_id==clientInfo.getInt("machine_id")){
+					int message_id = Integer.parseInt(params.get("message_id").toString());
+					if(message_id==123){
+						int device_id = Integer.parseInt(params.get("device_id").toString());
+						int command = Integer.parseInt(params.get("command").toString());
+						int parameter1 = Integer.parseInt(params.get("parameter1").toString());
+						if(device_id==86 && command ==0){
+							Connection connection=ConfigurationHelper.getConnection();
+							String query= format("INSERT INTO statistics_counter (`machine_id`) VALUES (%d);",machine_id);
+							query+=format("INSERT INTO statistics_bins_counter (machine_id,bin_id) SELECT DISTINCT machine_id,bin_id FROM bins WHERE machine_id=%d;",machine_id);
+							DatabaseHelper.runMultipleQuery(connection,query);
+							connection.close();
+						}
+						byte[] messageBytes= new byte[]{
+								0, 0, 0, 123, 0, 0, 0, 20,
+								(byte) (device_id >> 24),(byte) (device_id >> 16),(byte) (device_id >> 8),(byte) (device_id),
+								(byte) (command >> 24),(byte) (command >> 16),(byte) (command >> 8),(byte) (command),
+								(byte) (parameter1 >> 24),(byte) (parameter1 >> 16),(byte) (parameter1 >> 8),(byte) (parameter1)
+						};
+						sendBytes(messageBytes);
+					}
+				}
+			}
+		}
+		catch (Exception ex){
+			logger.error(CommonHelper.getStackTraceString(ex));
+		}
 	}
 }
