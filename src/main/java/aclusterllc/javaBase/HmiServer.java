@@ -226,15 +226,40 @@ public class HmiServer implements Runnable {
                 response.put("data",responseData);
                 sendMessage(connectedHmiClient,response.toString());
             }
-            else if (request.equals("basic_info")) {
-                response.put("data",ConfigurationHelper.dbBasicInfo);
-                sendMessage(connectedHmiClient,response.toString());
-            }
-            else if (request.equals("forward_ape_message")) {
-                JSONObject info=new JSONObject();
-                notifyToHmiMessageObservers(jsonObject,info);
-            }
+            else {
+                switch (request) {
+                    case "basic_info": {
+                        response.put("data",ConfigurationHelper.dbBasicInfo);
+                        sendMessage(connectedHmiClient,response.toString());
+                        break;
+                    }
+                    case "forward_ape_message":{
+                        JSONObject info=new JSONObject();
+                        notifyToHmiMessageObservers(jsonObject,info);
+                        break;
+                    }
+                    case "getLoginUser":{
+                        String username = params.getString("username");
+                        String password = params.getString("password");
 
+                        Connection connection=ConfigurationHelper.getConnection();
+                        String query = String.format("SELECT id,name, role FROM users WHERE username='%s' AND password='%s' LIMIT 1", username, password);
+                        JSONArray queryResult=DatabaseHelper.getSelectQueryResults(connection,query);
+                        JSONObject responseData=new JSONObject();
+                        if(queryResult.length()>0){
+                            responseData.put("status",true);
+                            responseData.put("user",queryResult.getJSONObject(0));
+                        }
+                        else{
+                            responseData.put("status",false);
+                        }
+                        connection.close();
+                        response.put("data",responseData);
+                        sendMessage(connectedHmiClient,response.toString());
+                        break;
+                    }
+                }
+            }
             //notify
 
         }
