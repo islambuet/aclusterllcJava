@@ -46,6 +46,18 @@ public class DatabaseHelper {
         }
         return resultsJsonArray;
     }
+    public static int runUpdateQuery(Connection connection,String query) throws SQLException {
+        int num_row=0;
+        if(query.length()>0){
+            connection.setAutoCommit(false);
+            Statement stmt = connection.createStatement();
+            num_row = stmt.executeUpdate(query);
+            connection.commit();
+            connection.setAutoCommit(true);
+            stmt.close();
+        }
+        return num_row;
+    }
     public static JSONObject getSelectQueryResults(Connection connection,String query,String[] keyColumns){
         JSONObject resultJsonObject = new JSONObject();
         try {

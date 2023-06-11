@@ -23,6 +23,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static java.lang.String.format;
+
 public class HmiServer implements Runnable {
     private Thread worker;
     Selector selector;
@@ -239,19 +241,56 @@ public class HmiServer implements Runnable {
                         break;
                     }
                     case "getLoginUser":{
+                        JSONObject responseData=new JSONObject();
                         String username = params.getString("username");
                         String password = params.getString("password");
-
                         Connection connection=ConfigurationHelper.getConnection();
                         String query = String.format("SELECT id,name, role FROM users WHERE username='%s' AND password='%s' LIMIT 1", username, password);
                         JSONArray queryResult=DatabaseHelper.getSelectQueryResults(connection,query);
-                        JSONObject responseData=new JSONObject();
+
                         if(queryResult.length()>0){
                             responseData.put("status",true);
                             responseData.put("user",queryResult.getJSONObject(0));
                         }
                         else{
                             responseData.put("status",false);
+                        }
+                        connection.close();
+                        response.put("data",responseData);
+                        sendMessage(connectedHmiClient,response.toString());
+                        break;
+                    }
+                    case "changeUserPassword":{
+                        JSONObject responseData=new JSONObject();
+                        responseData.put("status",false);
+                        int id = Integer.parseInt(params.get("id").toString());
+                        String password = params.get("password").toString();
+                        String password_new = params.get("password_new").toString();
+                        Connection connection=ConfigurationHelper.getConnection();
+                        String query = String.format("SELECT id,password FROM users WHERE id='%d';", id);
+                        JSONArray queryResult=DatabaseHelper.getSelectQueryResults(connection,query);
+
+                        if(queryResult.length()>0){
+                            JSONObject user=queryResult.getJSONObject(0);
+                            if(user.getString("password").equals(password)){
+                                String updateQuery = format("UPDATE %s SET password='%s' WHERE id=%d;","users",password_new,id);
+                                int num_row = DatabaseHelper.runUpdateQuery(connection,updateQuery);
+                                if(num_row>0){
+                                    responseData.put("status",true);
+                                    responseData.put("message","Password Changed Successfully.");
+                                }
+                                else{
+                                    responseData.put("message","Failed to change password");
+                                }
+
+                            }
+                            else{
+                                responseData.put("messages","Old Password did not matched.");
+                            }
+                        }
+                        else{
+                            responseData.put("status",false);
+                            responseData.put("messages","User not found.");
                         }
                         connection.close();
                         response.put("data",responseData);
