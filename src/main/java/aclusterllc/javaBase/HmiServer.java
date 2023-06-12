@@ -214,14 +214,23 @@ public class HmiServer implements Runnable {
                 for(int i=0;i<requestData.length();i++){
                     JSONObject requestFunction=requestData.getJSONObject(i);
                     String requestFunctionName=requestFunction.getString("name");
-                    if(requestFunctionName.equals("machine_mode")){
-                        responseData.put(requestFunctionName,DatabaseHelper.getMachineMode(connection,machine_id));
-                    }
-                    else if(requestFunctionName.equals("disconnected_device_counter")){
-                        responseData.put(requestFunctionName,DatabaseHelper.getDisconnectedDeviceCounter(connection,machine_id));
-                    }
-                    else if(requestFunctionName.equals("active_alarms")){
-                        responseData.put(requestFunctionName,DatabaseHelper.getActiveAlarms(connection,machine_id));
+                    switch (requestFunctionName) {
+                        case "active_alarms": {
+                            responseData.put(requestFunctionName,DatabaseHelper.getActiveAlarms(connection,machine_id));
+                            break;
+                        }
+                        case "disconnected_device_counter": {
+                            responseData.put(requestFunctionName,DatabaseHelper.getDisconnectedDeviceCounter(connection,machine_id));
+                            break;
+                        }
+                        case "machine_mode": {
+                            responseData.put(requestFunctionName,DatabaseHelper.getMachineMode(connection,machine_id));
+                            break;
+                        }
+                        case "statistics_counter": {
+                            responseData.put(requestFunctionName,DatabaseHelper.getStatisticsData(connection,machine_id,"statistics_counter",requestFunction.getJSONObject("params")));
+                            break;
+                        }
                     }
                 }
                 connection.close();

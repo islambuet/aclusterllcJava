@@ -375,9 +375,9 @@ public class ApeClient implements Runnable, HmiMessageObserver {
 			//MSG_ID = 116
 			//MSG_ID = 130
 		}
-		if(messageId==20|| messageId==21|| messageId==22){
-			System.out.println(messageId+" : "+ info);
-		}
+//		if(messageId==20|| messageId==21|| messageId==22){
+//			System.out.println(messageId+" : "+ info);
+//		}
 		notifyToApeMessageObservers(jsonMessage,info);
 
 	}
