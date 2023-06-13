@@ -137,8 +137,41 @@ public class DatabaseHelper {
         String query = String.format("SELECT machine_id,param_id,value FROM parameters WHERE machine_id=%d", machineId);
         return getSelectQueryResults(connection,query,new String[] { "machine_id", "param_id"});
     }
+    public static JSONArray getProductsHistory(Connection connection,int machineId,JSONObject params){
+        String query = "SELECT *,UNIX_TIMESTAMP(created_at) AS created_at_timestamp FROM products_history";
+
+        query+=String.format(" WHERE machine_id=%d",machineId);
+        if(params.has("to_timestamp")){
+            query+=String.format(" AND UNIX_TIMESTAMP(created_at)<=%d",params.getInt("to_timestamp"));
+        }
+        if(params.has("from_timestamp")){
+            query+=String.format(" AND UNIX_TIMESTAMP(created_at)>=%d",params.getInt("from_timestamp"));
+        }
+        if(params.has("reason")){
+            int reason=params.getInt("reason");
+            if(reason>-1){
+                query+=String.format(" AND reason=%d",params.getInt("reason"));
+            }
+        }
+        query+=" ORDER BY id DESC";
+        if(params.has("per_page")){
+            int per_page=params.getInt("per_page");
+            int page=0;
+            if(params.has("page")){
+                page=params.getInt("page");
+            }
+            if(page>0) {
+                query += String.format(" LIMIT %d OFFSET %d", per_page, (page - 1) * per_page);
+            }
+            else{
+                query+=String.format(" LIMIT %d",per_page);
+            }
+        }
+        query+=";";
+        return getSelectQueryResults(connection,query);
+    }
     public static JSONArray getStatisticsData(Connection connection,int machineId,String table,JSONObject params){
-        String query = "SELECT *,UNIX_TIMESTAMP(created_at) AS created_at_timestamp FROM ";// WHERE machine_id=%d AND UNIX_TIMESTAMP(created_at) BETWEEN %d AND %d ORDER BY id DESC%s", machineId,from_timestamp,to_timestamp,limitQuery);
+        String query = "SELECT *,UNIX_TIMESTAMP(created_at) AS created_at_timestamp FROM ";
         query+=table;
         query+=String.format(" WHERE machine_id=%d",machineId);
         if(params.has("to_timestamp")){

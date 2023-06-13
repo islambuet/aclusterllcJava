@@ -227,6 +227,10 @@ public class HmiServer implements Runnable {
                             responseData.put(requestFunctionName,DatabaseHelper.getMachineMode(connection,machine_id));
                             break;
                         }
+                        case "products_history": {
+                            responseData.put(requestFunctionName,DatabaseHelper.getProductsHistory(connection,machine_id,requestFunction.getJSONObject("params")));
+                            break;
+                        }
                         case "statistics_counter": {
                             responseData.put(requestFunctionName,DatabaseHelper.getStatisticsData(connection,machine_id,"statistics_counter",requestFunction.getJSONObject("params")));
                             break;
