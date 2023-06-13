@@ -162,15 +162,17 @@ public class DatabaseHelper {
         query+=" ORDER BY id DESC";
         if(params.has("per_page")){
             int per_page=params.getInt("per_page");
-            int page=0;
-            if(params.has("page")){
-                page=params.getInt("page");
-            }
-            if(page>0) {
-                query += String.format(" LIMIT %d OFFSET %d", per_page, (page - 1) * per_page);
-            }
-            else{
-                query+=String.format(" LIMIT %d",per_page);
+            if(per_page>0){
+                int page=0;
+                if(params.has("page")){
+                    page=params.getInt("page");
+                }
+                if(page>0) {
+                    query += String.format(" LIMIT %d OFFSET %d", per_page, (page - 1) * per_page);
+                }
+                else{
+                    query+=String.format(" LIMIT %d",per_page);
+                }
             }
         }
         query+=";";
@@ -196,15 +198,16 @@ public class DatabaseHelper {
         query+=" ORDER BY id DESC";
         if(params.has("per_page")){
             int per_page=params.getInt("per_page");
-            int page=0;
-            if(params.has("page")){
-                page=params.getInt("page");
-            }
-            if(page>0) {
-                query += String.format(" LIMIT %d OFFSET %d", per_page, (page - 1) * per_page);
-            }
-            else{
-                query+=String.format(" LIMIT %d",per_page);
+            if(per_page>0) {
+                int page=0;
+                if (params.has("page")) {
+                    page = params.getInt("page");
+                }
+                if (page > 0) {
+                    query += String.format(" LIMIT %d OFFSET %d", per_page, (page - 1) * per_page);
+                } else {
+                    query += String.format(" LIMIT %d", per_page);
+                }
             }
         }
         query+=";";
