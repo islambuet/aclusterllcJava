@@ -229,4 +229,15 @@ public class ConfigurationHelper {
     public static Connection getConnection() throws SQLException {
         return hikariDataSource.getConnection();
     }
+//    public static Connection getConnection() throws SQLException {
+//        String jdbcUrl = String.format("jdbc:mysql://%s:3306/%s" +
+//                        "?allowPublicKeyRetrieval=true" +
+//                        "&useSSL=false" +
+//                        "&useUnicode=true" +
+//                        "&characterEncoding=utf8" +
+//                        "&allowMultiQueries=true",
+//                configIni.getProperty("db_host"),
+//                configIni.getProperty("db_name"));
+//        return DriverManager.getConnection(jdbcUrl,"root","");
+//    }
 }

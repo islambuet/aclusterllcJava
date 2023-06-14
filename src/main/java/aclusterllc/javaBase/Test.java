@@ -3,9 +3,7 @@ package aclusterllc.javaBase;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -20,6 +18,20 @@ import static java.lang.String.format;
 
 public class Test {
     public static void main(String[] args) {
+        try {
+            Connection connection= DriverManager.getConnection("jdbc:mysql://localhost:3306/javabase","root","");
+            Connection connection2= DriverManager.getConnection("jdbc:mysql://localhost:3306/javabase","root","");
+            Thread.sleep(10 * 1000);
+
+            System.out.println(DatabaseHelper.getParameterValues(connection,1));
+            connection.close();
+            System.out.println("frist sleep done");
+            Thread.sleep(10 * 1000);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    public static void main4(String[] args) {
         ConfigurationHelper.loadIniConfig();
         int start=5;
         String query="";
