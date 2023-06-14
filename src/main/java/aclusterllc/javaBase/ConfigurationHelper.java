@@ -226,8 +226,16 @@ public class ConfigurationHelper {
             System.exit(0);
         }
     }
-    public static Connection getConnection() throws SQLException {
-        return hikariDataSource.getConnection();
+    public static Connection getConnection(){
+        try {
+            return hikariDataSource.getConnection();
+        }
+        catch (SQLException ex) {
+            logger.error("[Database] Connection Failed.Closing Java Program.");
+            logger.error("[Database]"+CommonHelper.getStackTraceString(ex));
+            System.exit(0);
+            return null;
+        }
     }
 //    public static Connection getConnection() throws SQLException {
 //        String jdbcUrl = String.format("jdbc:mysql://%s:3306/%s" +
