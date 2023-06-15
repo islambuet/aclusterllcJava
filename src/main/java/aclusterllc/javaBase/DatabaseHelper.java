@@ -178,6 +178,7 @@ public class DatabaseHelper {
         query+=";";
         totalQuery+=";";
         JSONArray totalQueryResult=getSelectQueryResults(connection,totalQuery);
+        resultJsonObject.put("params", params);
         resultJsonObject.put("totalRecords", totalQueryResult.getJSONObject(0).getInt("totalRecords"));
         resultJsonObject.put("records", getSelectQueryResults(connection,query));
         return resultJsonObject;
