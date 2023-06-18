@@ -5,3 +5,5 @@
     select the package name and rename it
     Make sure porm.xml copied for external libray and .idea aswell
 # Create Artifacts for exe 
+# for database timer
+    SET GLOBAL event_scheduler = ON;

@@ -212,6 +212,7 @@ public class DatabaseHelper {
             }
         }
         query+=";";
+        resultJsonObject.put("params", params);
         resultJsonObject.put("records", getSelectQueryResults(connection,query));
         return resultJsonObject;
     }
