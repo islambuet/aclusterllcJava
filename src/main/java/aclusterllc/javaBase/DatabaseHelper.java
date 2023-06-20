@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.*;
+import java.util.Arrays;
 
 import static java.lang.String.format;
 
@@ -195,6 +196,11 @@ public class DatabaseHelper {
         }
         if(params.has("from_timestamp")){
             query+=String.format(" AND UNIX_TIMESTAMP(created_at)>=%d",params.getInt("from_timestamp"));
+        }
+        if(Arrays.asList("statistics_bins","statistics_bins","statistics_bins").contains(table)){
+            if(params.has("bin_id")){
+                query+=String.format(" AND bin_id=%d", params.getInt("bin_id"));
+            }
         }
         query+=" ORDER BY id DESC";
         if(params.has("per_page")){

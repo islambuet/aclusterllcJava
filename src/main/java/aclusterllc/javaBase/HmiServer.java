@@ -247,6 +247,18 @@ public class HmiServer implements Runnable {
                             responseData.put(requestFunctionName,DatabaseHelper.getStatisticsData(connection,machine_id,"statistics_counter",requestFunction.getJSONObject("params")));
                             break;
                         }
+                        case "statistics_bins": {
+                            responseData.put(requestFunctionName,DatabaseHelper.getStatisticsData(connection,machine_id,"statistics_bins",requestFunction.getJSONObject("params")));
+                            break;
+                        }
+                        case "statistics_bins_counter": {
+                            responseData.put(requestFunctionName,DatabaseHelper.getStatisticsData(connection,machine_id,"statistics_bins_counter",requestFunction.getJSONObject("params")));
+                            break;
+                        }
+                        case "statistics_bins_hourly": {
+                            responseData.put(requestFunctionName,DatabaseHelper.getStatisticsData(connection,machine_id,"statistics_bins_hourly",requestFunction.getJSONObject("params")));
+                            break;
+                        }
                     }
                 }
                 connection.close();

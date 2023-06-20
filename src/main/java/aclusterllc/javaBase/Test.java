@@ -3,6 +3,7 @@ package aclusterllc.javaBase;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.sql.*;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -17,7 +18,18 @@ import static java.lang.String.format;
 
 
 public class Test {
-    public static void main(String[] args) {
+    public static void main(String[] args)
+    {
+//        Runtime r = Runtime.getRuntime();
+//        try
+//        {
+//            r.exec("shutdown -r -t 5");
+//            System.out.println("Restarting the Computer after 5 seconds.");
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+    }
+    public static void main5(String[] args) {
         try {
             Connection connection= DriverManager.getConnection("jdbc:mysql://localhost:3306/javabase","root","");
             Connection connection2= DriverManager.getConnection("jdbc:mysql://localhost:3306/javabase","root","");
