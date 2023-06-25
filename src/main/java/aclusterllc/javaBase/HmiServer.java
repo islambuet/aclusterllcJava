@@ -41,9 +41,15 @@ public class HmiServer implements Runnable {
         msg=startTag+msg+endTag;
         ByteBuffer buf = ByteBuffer.wrap(msg.getBytes());
         try {
-            connectedHmiClient.write(buf);
+            while (buf.hasRemaining()){
+                int n=connectedHmiClient.write(buf);
+                if(buf.remaining()>0){
+                    logger.info("[DATA_SEND_TO_HMI]] waiting 30 for next send. MSG Len "+msg.length()+" Written bytes: " + n + ", Remaining: " + buf.remaining()+" MSG "+msg.substring(0,30));
+                    Thread.sleep(30);
+                }
+            }
         }
-        catch (IOException ex) {
+        catch (Exception ex) {
             logger.error(CommonHelper.getStackTraceString(ex));
         }
     }
