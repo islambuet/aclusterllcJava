@@ -229,8 +229,16 @@ public class HmiServer implements Runnable {
                             responseData.put(requestFunctionName,DatabaseHelper.getDisconnectedDeviceCounter(connection,machine_id));
                             break;
                         }
+                        case "input_states": {
+                            responseData.put(requestFunctionName,DatabaseHelper.getInputStates(connection,machine_id));
+                            break;
+                        }
                         case "machine_mode": {
                             responseData.put(requestFunctionName,DatabaseHelper.getMachineMode(connection,machine_id));
+                            break;
+                        }
+                        case "output_states": {
+                            responseData.put(requestFunctionName,DatabaseHelper.getOutputStates(connection,machine_id));
                             break;
                         }
                         case "products_history": {
