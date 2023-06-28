@@ -133,24 +133,29 @@ public class HmiServer implements Runnable {
             thread.start();
         }
         public void stop(){
-            thread.interrupt();
+            try {
+                thread.interrupt();
+                logger.info("Closing Connection with HmiClient: " + socketChannel.getRemoteAddress());
+                System.out.println("Closing Connection with HmiClient: " + socketChannel.getRemoteAddress());
+                socketChannel.close();
+            } catch (IOException ex) {
+                logger.error(CommonHelper.getStackTraceString(ex));
+            }
+
         }
         public synchronized void processReceivedData(byte[] b){
-            System.out.println(b.length);
+            buffer=buffer+new String( b, StandardCharsets.UTF_8 );
             this.notify();
         }
         public void run(){
             synchronized (this){
                 try {
                     while (true){
-                        System.out.println("Waiting For New Message.");
                         wait();
-                        System.out.println("Processing Buffer");
-                        //Thread.sleep(10000);
+                        processReceivedData();
                     }
                 }
                 catch (Exception ex) {
-                    System.out.println("I am here");
                     logger.error(CommonHelper.getStackTraceString(ex));
                 }
             }
@@ -158,26 +163,217 @@ public class HmiServer implements Runnable {
             //notifyToHmiMessageObservers(new JSONObject(),new JSONObject());
 
         }
-    }
+        public void processReceivedData(){
+            System.out.println(buffer);
+            String startTag="<begin>";
+            String endTag="</begin>";
 
-    public void sendMessage(SocketChannel connectedHmiClient, String msg) {
-        String startTag="<begin>";
-        String endTag="</begin>";
-        msg=startTag+msg+endTag;
-        ByteBuffer buf = ByteBuffer.wrap(msg.getBytes());
-        try {
-            while (buf.hasRemaining()){
-                int n=connectedHmiClient.write(buf);
-                if(buf.remaining()>0){
-                    logger.info("[DATA_SEND_TO_HMI]] waiting 30 for next send. MSG Len "+msg.length()+" Written bytes: " + n + ", Remaining: " + buf.remaining()+" MSG "+msg.substring(0,30));
-                    Thread.sleep(30);
+            int startPos=buffer.indexOf(startTag);
+            int endPos=buffer.indexOf(endTag);
+            while (startPos>-1 && endPos>-1){
+                if(startPos>0){
+                    logger.warn("[DATA_PROCESS][START_POS_ERROR] Message did not started with begin. Data: "+buffer);
                 }
+                if(startPos>endPos){
+                    logger.warn("[DATA_PROCESS][END_POS_ERROR] End tag found before start tag. Data: "+buffer);
+                    buffer=buffer.substring(startPos);
+                }
+                else{
+                    String messageString=buffer.substring(startPos+startTag.length(),endPos);
+                    try {
+                        JSONObject jsonObject = new JSONObject(messageString);
+                            processReceivedMessage(jsonObject);
+                    }
+                    catch (JSONException ex) {
+                        logger.error(CommonHelper.getStackTraceString(ex));
+                    }
+                    buffer=buffer.substring(endPos+endTag.length());
+                    //parse
+                }
+                startPos=buffer.indexOf(startTag);
+                endPos=buffer.indexOf(endTag);
             }
         }
-        catch (Exception ex) {
-            logger.error(CommonHelper.getStackTraceString(ex));
+        public void processReceivedMessage(JSONObject jsonObject){
+            try {
+                JSONObject response=new JSONObject();
+
+                //System.out.println(jsonObject);
+                String request = jsonObject.getString("request");
+                JSONObject params = jsonObject.getJSONObject("params");
+                JSONArray requestData = jsonObject.getJSONArray("requestData");
+
+                response.put("request",request);
+                response.put("params",params);
+
+                int machine_id=0;
+                if(params.has("machine_id")){machine_id=params.getInt("machine_id");}
+
+                if(requestData.length()>0){
+                    Connection connection=ConfigurationHelper.getConnection();
+                    JSONObject responseData=new JSONObject();
+                    for(int i=0;i<requestData.length();i++){
+                        JSONObject requestFunction=requestData.getJSONObject(i);
+                        String requestFunctionName=requestFunction.getString("name");
+                        switch (requestFunctionName) {
+                            case "active_alarms": {
+                                responseData.put(requestFunctionName,DatabaseHelper.getActiveAlarms(connection,machine_id));
+                                break;
+                            }
+                            case "disconnected_device_counter": {
+                                responseData.put(requestFunctionName,DatabaseHelper.getDisconnectedDeviceCounter(connection,machine_id));
+                                break;
+                            }
+                            case "input_states": {
+                                responseData.put(requestFunctionName,DatabaseHelper.getInputStates(connection,machine_id));
+                                break;
+                            }
+                            case "machine_mode": {
+                                responseData.put(requestFunctionName,DatabaseHelper.getMachineMode(connection,machine_id));
+                                break;
+                            }
+                            case "output_states": {
+                                responseData.put(requestFunctionName,DatabaseHelper.getOutputStates(connection,machine_id));
+                                break;
+                            }
+                            case "products_history": {
+                                responseData.put(requestFunctionName,DatabaseHelper.getProductsHistory(connection,machine_id,requestFunction.getJSONObject("params")));
+                                break;
+                            }
+                            case "statistics": {
+                                responseData.put(requestFunctionName,DatabaseHelper.getStatisticsData(connection,machine_id,"statistics",requestFunction.getJSONObject("params")));
+                                break;
+                            }
+                            case "statistics_hourly": {
+                                responseData.put(requestFunctionName,DatabaseHelper.getStatisticsData(connection,machine_id,"statistics_hourly",requestFunction.getJSONObject("params")));
+                                break;
+                            }
+                            case "statistics_minutely": {
+                                responseData.put(requestFunctionName,DatabaseHelper.getStatisticsData(connection,machine_id,"statistics_minutely",requestFunction.getJSONObject("params")));
+                                break;
+                            }
+                            case "statistics_counter": {
+                                responseData.put(requestFunctionName,DatabaseHelper.getStatisticsData(connection,machine_id,"statistics_counter",requestFunction.getJSONObject("params")));
+                                break;
+                            }
+                            case "statistics_bins": {
+                                responseData.put(requestFunctionName,DatabaseHelper.getStatisticsData(connection,machine_id,"statistics_bins",requestFunction.getJSONObject("params")));
+                                break;
+                            }
+                            case "statistics_bins_counter": {
+                                responseData.put(requestFunctionName,DatabaseHelper.getStatisticsData(connection,machine_id,"statistics_bins_counter",requestFunction.getJSONObject("params")));
+                                break;
+                            }
+                            case "statistics_bins_hourly": {
+                                responseData.put(requestFunctionName,DatabaseHelper.getStatisticsData(connection,machine_id,"statistics_bins_hourly",requestFunction.getJSONObject("params")));
+                                break;
+                            }
+                        }
+                    }
+                    connection.close();
+                    response.put("data",responseData);
+                    sendMessage(response.toString());
+                }
+                else {
+                    switch (request) {
+                        case "basic_info": {
+                            response.put("data",ConfigurationHelper.dbBasicInfo);
+                            sendMessage(response.toString());
+                            break;
+                        }
+                        case "forward_ape_message":{
+                            JSONObject info=new JSONObject();
+                            notifyToHmiMessageObservers(jsonObject,info);
+                            break;
+                        }
+                        case "getLoginUser":{
+                            JSONObject responseData=new JSONObject();
+                            String username = params.getString("username");
+                            String password = params.getString("password");
+                            Connection connection=ConfigurationHelper.getConnection();
+                            String query = String.format("SELECT id,name, role FROM users WHERE username='%s' AND password='%s' LIMIT 1", username, password);
+                            JSONArray queryResult=DatabaseHelper.getSelectQueryResults(connection,query);
+
+                            if(queryResult.length()>0){
+                                responseData.put("status",true);
+                                responseData.put("user",queryResult.getJSONObject(0));
+                            }
+                            else{
+                                responseData.put("status",false);
+                            }
+                            connection.close();
+                            response.put("data",responseData);
+                            sendMessage(response.toString());
+                            break;
+                        }
+                        case "changeUserPassword":{
+                            JSONObject responseData=new JSONObject();
+                            responseData.put("status",false);
+                            int id = Integer.parseInt(params.get("id").toString());
+                            String password = params.get("password").toString();
+                            String password_new = params.get("password_new").toString();
+                            Connection connection=ConfigurationHelper.getConnection();
+                            String query = String.format("SELECT id,password FROM users WHERE id='%d';", id);
+                            JSONArray queryResult=DatabaseHelper.getSelectQueryResults(connection,query);
+
+                            if(queryResult.length()>0){
+                                JSONObject user=queryResult.getJSONObject(0);
+                                if(user.getString("password").equals(password)){
+                                    String updateQuery = format("UPDATE %s SET password='%s' WHERE id=%d;","users",password_new,id);
+                                    int num_row = DatabaseHelper.runUpdateQuery(connection,updateQuery);
+                                    if(num_row>0){
+                                        responseData.put("status",true);
+                                        responseData.put("message","Password Changed Successfully.");
+                                    }
+                                    else{
+                                        responseData.put("message","Failed to change password");
+                                    }
+
+                                }
+                                else{
+                                    responseData.put("messages","Old Password did not matched.");
+                                }
+                            }
+                            else{
+                                responseData.put("status",false);
+                                responseData.put("messages","User not found.");
+                            }
+                            connection.close();
+                            response.put("data",responseData);
+                            sendMessage(response.toString());
+                            break;
+                        }
+                    }
+                }
+                //notify
+
+            }
+            catch (Exception ex){
+                ex.printStackTrace();
+                //logger.error(CommonHelper.getStackTraceString(ex));
+            }
+
+        }
+        public void sendMessage(String msg) {
+            String startTag="<begin>";
+            String endTag="</begin>";
+            msg=startTag+msg+endTag;
+            ByteBuffer buf = ByteBuffer.wrap(msg.getBytes());
+            try {
+                while (buf.hasRemaining()){
+                    int n=socketChannel.write(buf);
+                    if(buf.remaining()>0){
+                        logger.info("[DATA_SEND_TO_HMI]] waiting 30 for next send. MSG Len "+msg.length()+" Written bytes: " + n + ", Remaining: " + buf.remaining()+" MSG "+msg.substring(0,30));
+                        Thread.sleep(30);
+                    }
+                }
+            }
+            catch (Exception ex) {
+                logger.error(CommonHelper.getStackTraceString(ex));
+            }
         }
     }
+
     public void disconnectConnectedHmiClient(SocketChannel socketChannel) {
         try {
             ConnectedHmiClient connectedHmiClient=connectedHmiClientList.remove(socketChannel);
@@ -208,213 +404,4 @@ public class HmiServer implements Runnable {
             hmiMessageObserver.processHmiMessage(jsonMessage,info);
         }
     }
-
-    public void processReceivedDataFromConnectedHmiClient(SocketChannel connectedHmiSocketChannel,byte[] b){
-//        ConnectedHmiClient connectedHmiClient=connectedHmiClient2List.get(connectedHmiSocketChannel);
-//        if(connectedHmiClient==null){
-//            logger.error("[DATA_PROCESS] ConnectedHmiClientInfo Not found.");
-//        }
-//        else{
-//            connectedHmiClient.processReceivedData(b);
-//        }
-
-        /*JSONObject connectedHmiClientInfo= connectedHmiClientList.get(connectedHmiClient);
-
-        else{
-
-            String previousBuffer=(String) connectedHmiClientInfo.get("buffer");
-            String data=previousBuffer+new String( b, StandardCharsets.UTF_8 );
-
-            String startTag="<begin>";
-            String endTag="</begin>";
-
-            int startPos=data.indexOf(startTag);
-            int endPos=data.indexOf(endTag);
-            while (startPos>-1 && endPos>-1){
-                if(startPos>0){
-                    logger.warn("[DATA_PROCESS][START_POS_ERROR] Message did not started with begin. Data: "+data);
-                }
-                if(startPos>endPos){
-                    logger.warn("[DATA_PROCESS][END_POS_ERROR] End tag found before start tag. Data: "+data);
-                    data=data.substring(startPos);
-                }
-                else{
-                    String messageString=data.substring(startPos+startTag.length(),endPos);
-                    try {
-                        JSONObject jsonObject = new JSONObject(messageString);
-                            processReceivedMessageFromConnectedHmiClient(connectedHmiClient, jsonObject);
-                    }
-                    catch (JSONException ex) {
-                        logger.error(CommonHelper.getStackTraceString(ex));
-                    }
-                    data=data.substring(endPos+endTag.length());
-                    //parse
-                }
-                startPos=data.indexOf(startTag);
-                endPos=data.indexOf(endTag);
-            }
-            connectedHmiClientInfo.put("buffer",data);
-        }*/
-    }
-    public void processReceivedMessageFromConnectedHmiClient(SocketChannel connectedHmiClient,JSONObject jsonObject){
-        try {
-            JSONObject response=new JSONObject();
-
-            //System.out.println(jsonObject);
-            String request = jsonObject.getString("request");
-            JSONObject params = jsonObject.getJSONObject("params");
-            JSONArray requestData = jsonObject.getJSONArray("requestData");
-
-            response.put("request",request);
-            response.put("params",params);
-
-            int machine_id=0;
-            if(params.has("machine_id")){machine_id=params.getInt("machine_id");}
-
-            if(requestData.length()>0){
-                Connection connection=ConfigurationHelper.getConnection();
-                JSONObject responseData=new JSONObject();
-                for(int i=0;i<requestData.length();i++){
-                    JSONObject requestFunction=requestData.getJSONObject(i);
-                    String requestFunctionName=requestFunction.getString("name");
-                    switch (requestFunctionName) {
-                        case "active_alarms": {
-                            responseData.put(requestFunctionName,DatabaseHelper.getActiveAlarms(connection,machine_id));
-                            break;
-                        }
-                        case "disconnected_device_counter": {
-                            responseData.put(requestFunctionName,DatabaseHelper.getDisconnectedDeviceCounter(connection,machine_id));
-                            break;
-                        }
-                        case "input_states": {
-                            responseData.put(requestFunctionName,DatabaseHelper.getInputStates(connection,machine_id));
-                            break;
-                        }
-                        case "machine_mode": {
-                            responseData.put(requestFunctionName,DatabaseHelper.getMachineMode(connection,machine_id));
-                            break;
-                        }
-                        case "output_states": {
-                            responseData.put(requestFunctionName,DatabaseHelper.getOutputStates(connection,machine_id));
-                            break;
-                        }
-                        case "products_history": {
-                            responseData.put(requestFunctionName,DatabaseHelper.getProductsHistory(connection,machine_id,requestFunction.getJSONObject("params")));
-                            break;
-                        }
-                        case "statistics": {
-                            responseData.put(requestFunctionName,DatabaseHelper.getStatisticsData(connection,machine_id,"statistics",requestFunction.getJSONObject("params")));
-                            break;
-                        }
-                        case "statistics_hourly": {
-                            responseData.put(requestFunctionName,DatabaseHelper.getStatisticsData(connection,machine_id,"statistics_hourly",requestFunction.getJSONObject("params")));
-                            break;
-                        }
-                        case "statistics_minutely": {
-                            responseData.put(requestFunctionName,DatabaseHelper.getStatisticsData(connection,machine_id,"statistics_minutely",requestFunction.getJSONObject("params")));
-                            break;
-                        }
-                        case "statistics_counter": {
-                            responseData.put(requestFunctionName,DatabaseHelper.getStatisticsData(connection,machine_id,"statistics_counter",requestFunction.getJSONObject("params")));
-                            break;
-                        }
-                        case "statistics_bins": {
-                            responseData.put(requestFunctionName,DatabaseHelper.getStatisticsData(connection,machine_id,"statistics_bins",requestFunction.getJSONObject("params")));
-                            break;
-                        }
-                        case "statistics_bins_counter": {
-                            responseData.put(requestFunctionName,DatabaseHelper.getStatisticsData(connection,machine_id,"statistics_bins_counter",requestFunction.getJSONObject("params")));
-                            break;
-                        }
-                        case "statistics_bins_hourly": {
-                            responseData.put(requestFunctionName,DatabaseHelper.getStatisticsData(connection,machine_id,"statistics_bins_hourly",requestFunction.getJSONObject("params")));
-                            break;
-                        }
-                    }
-                }
-                connection.close();
-                response.put("data",responseData);
-                sendMessage(connectedHmiClient,response.toString());
-            }
-            else {
-                switch (request) {
-                    case "basic_info": {
-                        response.put("data",ConfigurationHelper.dbBasicInfo);
-                        sendMessage(connectedHmiClient,response.toString());
-                        break;
-                    }
-                    case "forward_ape_message":{
-                        JSONObject info=new JSONObject();
-                        notifyToHmiMessageObservers(jsonObject,info);
-                        break;
-                    }
-                    case "getLoginUser":{
-                        JSONObject responseData=new JSONObject();
-                        String username = params.getString("username");
-                        String password = params.getString("password");
-                        Connection connection=ConfigurationHelper.getConnection();
-                        String query = String.format("SELECT id,name, role FROM users WHERE username='%s' AND password='%s' LIMIT 1", username, password);
-                        JSONArray queryResult=DatabaseHelper.getSelectQueryResults(connection,query);
-
-                        if(queryResult.length()>0){
-                            responseData.put("status",true);
-                            responseData.put("user",queryResult.getJSONObject(0));
-                        }
-                        else{
-                            responseData.put("status",false);
-                        }
-                        connection.close();
-                        response.put("data",responseData);
-                        sendMessage(connectedHmiClient,response.toString());
-                        break;
-                    }
-                    case "changeUserPassword":{
-                        JSONObject responseData=new JSONObject();
-                        responseData.put("status",false);
-                        int id = Integer.parseInt(params.get("id").toString());
-                        String password = params.get("password").toString();
-                        String password_new = params.get("password_new").toString();
-                        Connection connection=ConfigurationHelper.getConnection();
-                        String query = String.format("SELECT id,password FROM users WHERE id='%d';", id);
-                        JSONArray queryResult=DatabaseHelper.getSelectQueryResults(connection,query);
-
-                        if(queryResult.length()>0){
-                            JSONObject user=queryResult.getJSONObject(0);
-                            if(user.getString("password").equals(password)){
-                                String updateQuery = format("UPDATE %s SET password='%s' WHERE id=%d;","users",password_new,id);
-                                int num_row = DatabaseHelper.runUpdateQuery(connection,updateQuery);
-                                if(num_row>0){
-                                    responseData.put("status",true);
-                                    responseData.put("message","Password Changed Successfully.");
-                                }
-                                else{
-                                    responseData.put("message","Failed to change password");
-                                }
-
-                            }
-                            else{
-                                responseData.put("messages","Old Password did not matched.");
-                            }
-                        }
-                        else{
-                            responseData.put("status",false);
-                            responseData.put("messages","User not found.");
-                        }
-                        connection.close();
-                        response.put("data",responseData);
-                        sendMessage(connectedHmiClient,response.toString());
-                        break;
-                    }
-                }
-            }
-            //notify
-
-        }
-        catch (Exception ex){
-            ex.printStackTrace();
-            //logger.error(CommonHelper.getStackTraceString(ex));
-        }
-
-    }
-
 }
