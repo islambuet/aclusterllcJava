@@ -30,28 +30,11 @@ public class HmiServer implements Runnable {
     Selector selector;
     ServerSocketChannel serverSocketChannel;
     ByteBuffer buffer = ByteBuffer.allocate(10240000);
-    ConcurrentHashMap<SocketChannel, JSONObject> connectedHmiClientList = new ConcurrentHashMap<>();
+
+    ConcurrentHashMap<SocketChannel, ConnectedHmiClient> connectedHmiClientList = new ConcurrentHashMap<>();
     Logger logger = LoggerFactory.getLogger(HmiServer.class);
     final List<HmiMessageObserver> hmiMessageObservers = new ArrayList<>();
     public HmiServer() {
-    }
-    public void sendMessage(SocketChannel connectedHmiClient, String msg) {
-        String startTag="<begin>";
-        String endTag="</begin>";
-        msg=startTag+msg+endTag;
-        ByteBuffer buf = ByteBuffer.wrap(msg.getBytes());
-        try {
-            while (buf.hasRemaining()){
-                int n=connectedHmiClient.write(buf);
-                if(buf.remaining()>0){
-                    logger.info("[DATA_SEND_TO_HMI]] waiting 30 for next send. MSG Len "+msg.length()+" Written bytes: " + n + ", Remaining: " + buf.remaining()+" MSG "+msg.substring(0,30));
-                    Thread.sleep(30);
-                }
-            }
-        }
-        catch (Exception ex) {
-            logger.error(CommonHelper.getStackTraceString(ex));
-        }
     }
     public void start(){
         logger.info("HMI Server Started");
@@ -67,7 +50,6 @@ public class HmiServer implements Runnable {
             logger.error(CommonHelper.getStackTraceString(ex));
         }
     }
-
     public void run() {
         while (true) {
             try {
@@ -92,53 +74,121 @@ public class HmiServer implements Runnable {
                 //e.printStackTrace();
             }
         }
-
     }
     public void registerConnectedHmiClient(SelectionKey key){
         try {
 
-            SocketChannel connectedHmiClient=serverSocketChannel.accept();
-            //TODO add condition form MULTIPLE_CLIENT handling
-            connectedHmiClient.configureBlocking(false);
-            connectedHmiClient.register(selector, SelectionKey.OP_READ);
-            JSONObject connectedHmiClientInfo=new JSONObject();
-            connectedHmiClientInfo.put("ipAddress",connectedHmiClient.getRemoteAddress().toString().split("/")[1]);
-            connectedHmiClientInfo.put("buffer","");
-            connectedHmiClientList.put(connectedHmiClient,connectedHmiClientInfo);
-            logger.info("Connected with HmiClient: " + connectedHmiClient.getRemoteAddress());
-        } catch (IOException e) {
-            logger.error(e.toString());
+            SocketChannel socketChannel=serverSocketChannel.accept();
+            socketChannel.configureBlocking(false);
+            socketChannel.register(selector, SelectionKey.OP_READ);
+            connectedHmiClientList.put(socketChannel,new ConnectedHmiClient(socketChannel));
+        } catch (IOException ex) {
+            logger.error(CommonHelper.getStackTraceString(ex));
         }
     }
     public void readReceivedDataFromConnectedHmiClient(SelectionKey key) {
-        SocketChannel connectedHmiClient = (SocketChannel) key.channel();
+        SocketChannel socketChannel = (SocketChannel) key.channel();
         buffer.clear();
         int numRead = 0;
         try {
-            numRead = connectedHmiClient.read(buffer);
+            numRead = socketChannel.read(buffer);
         } catch (IOException e) {
             logger.error(e.toString());
-            disconnectConnectedHmiClient(connectedHmiClient);
+            disconnectConnectedHmiClient(socketChannel);
             return;
         }
         if (numRead == -1) {
             // Remote entity shut the socket down cleanly. Do the same from our end and cancel the channel.
-            disconnectConnectedHmiClient(connectedHmiClient);
+            disconnectConnectedHmiClient(socketChannel);
             return;
         }
 
         byte[] b = new byte[buffer.position()];
         buffer.flip();
         buffer.get(b);
-        processReceivedDataFromConnectedHmiClient(connectedHmiClient,b);
+        ConnectedHmiClient connectedHmiClient=connectedHmiClientList.get(socketChannel);
+        if(connectedHmiClient==null){
+            logger.error("[DATA_PROCESS] ConnectedHmiClient Not found.");
+        }
+        else{
+            connectedHmiClient.processReceivedData(b);
+        }
     }
-    public void disconnectConnectedHmiClient(SocketChannel connectedHmiClient) {
-        try {
-            connectedHmiClient.close();
-            JSONObject connectedHmiClientInfo= connectedHmiClientList.remove(connectedHmiClient);
-            logger.error("Disconnected connectedHmiClient: " + connectedHmiClientInfo.get("ipAddress"));
+    class ConnectedHmiClient implements Runnable{
+        SocketChannel socketChannel;
+        String buffer="";
+        Thread thread=new Thread(this);
 
-        } catch (IOException ex) {
+        public ConnectedHmiClient(SocketChannel socketChannel) {
+            this.socketChannel=socketChannel;
+            try {
+                logger.info("Connected with HmiClient: " + socketChannel.getRemoteAddress());
+            }
+            catch (Exception ex) {
+                logger.error(CommonHelper.getStackTraceString(ex));
+            }
+            this.start();
+        }
+        public void start(){
+            thread.start();
+        }
+        public void stop(){
+            thread.interrupt();
+        }
+        public synchronized void processReceivedData(byte[] b){
+            System.out.println(b.length);
+            this.notify();
+        }
+        public void run(){
+            synchronized (this){
+                try {
+                    while (true){
+                        System.out.println("Waiting For New Message.");
+                        wait();
+                        System.out.println("Processing Buffer");
+                        //Thread.sleep(10000);
+                    }
+                }
+                catch (Exception ex) {
+                    System.out.println("I am here");
+                    logger.error(CommonHelper.getStackTraceString(ex));
+                }
+            }
+            System.out.println("Run Ended");
+            //notifyToHmiMessageObservers(new JSONObject(),new JSONObject());
+
+        }
+    }
+
+    public void sendMessage(SocketChannel connectedHmiClient, String msg) {
+        String startTag="<begin>";
+        String endTag="</begin>";
+        msg=startTag+msg+endTag;
+        ByteBuffer buf = ByteBuffer.wrap(msg.getBytes());
+        try {
+            while (buf.hasRemaining()){
+                int n=connectedHmiClient.write(buf);
+                if(buf.remaining()>0){
+                    logger.info("[DATA_SEND_TO_HMI]] waiting 30 for next send. MSG Len "+msg.length()+" Written bytes: " + n + ", Remaining: " + buf.remaining()+" MSG "+msg.substring(0,30));
+                    Thread.sleep(30);
+                }
+            }
+        }
+        catch (Exception ex) {
+            logger.error(CommonHelper.getStackTraceString(ex));
+        }
+    }
+    public void disconnectConnectedHmiClient(SocketChannel socketChannel) {
+        try {
+            ConnectedHmiClient connectedHmiClient=connectedHmiClientList.remove(socketChannel);
+            if(connectedHmiClient==null){
+                logger.error("[DATA_PROCESS] ConnectedHmiClient Not found.");
+            }
+            else{
+               connectedHmiClient.stop();
+            }
+        }
+        catch (Exception ex) {
             logger.error(CommonHelper.getStackTraceString(ex));
         }
     }
@@ -158,11 +208,18 @@ public class HmiServer implements Runnable {
             hmiMessageObserver.processHmiMessage(jsonMessage,info);
         }
     }
-    public void processReceivedDataFromConnectedHmiClient(SocketChannel connectedHmiClient,byte[] b){
-        JSONObject connectedHmiClientInfo= connectedHmiClientList.get(connectedHmiClient);
-        if(connectedHmiClientInfo==null){
-            logger.error("[DATA_PROCESS] ConnectedHmiClientInfo Not found.");
-        }
+
+    public void processReceivedDataFromConnectedHmiClient(SocketChannel connectedHmiSocketChannel,byte[] b){
+//        ConnectedHmiClient connectedHmiClient=connectedHmiClient2List.get(connectedHmiSocketChannel);
+//        if(connectedHmiClient==null){
+//            logger.error("[DATA_PROCESS] ConnectedHmiClientInfo Not found.");
+//        }
+//        else{
+//            connectedHmiClient.processReceivedData(b);
+//        }
+
+        /*JSONObject connectedHmiClientInfo= connectedHmiClientList.get(connectedHmiClient);
+
         else{
 
             String previousBuffer=(String) connectedHmiClientInfo.get("buffer");
@@ -197,7 +254,7 @@ public class HmiServer implements Runnable {
                 endPos=data.indexOf(endTag);
             }
             connectedHmiClientInfo.put("buffer",data);
-        }
+        }*/
     }
     public void processReceivedMessageFromConnectedHmiClient(SocketChannel connectedHmiClient,JSONObject jsonObject){
         try {
@@ -359,4 +416,5 @@ public class HmiServer implements Runnable {
         }
 
     }
+
 }
