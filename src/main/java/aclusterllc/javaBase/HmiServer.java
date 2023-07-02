@@ -164,7 +164,6 @@ public class HmiServer implements Runnable {
 
         }
         public void processReceivedData(){
-            System.out.println(buffer);
             String startTag="<begin>";
             String endTag="</begin>";
 

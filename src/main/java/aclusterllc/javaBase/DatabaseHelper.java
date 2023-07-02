@@ -164,6 +164,16 @@ public class DatabaseHelper {
                 totalQuery+=String.format(" AND reason=%d",params.getInt("reason"));
             }
         }
+        if(params.has("search_barcode")){
+            String search_barcode=params.getString("search_barcode");
+            if(search_barcode.length()>0){
+
+                query+=String.format(" AND barcode1_string LIKE \"%%%s%%\"",search_barcode);
+                totalQuery+=String.format(" AND barcode1_string LIKE \"%%%s%%\"",search_barcode);
+            }
+        }
+        System.out.println(params);
+        //
         query+=" ORDER BY id DESC";
         if(params.has("per_page")){
             int per_page=params.getInt("per_page");
@@ -181,7 +191,9 @@ public class DatabaseHelper {
             }
         }
         query+=";";
+        System.out.println(query);
         totalQuery+=";";
+        System.out.println(totalQuery);
         JSONArray totalQueryResult=getSelectQueryResults(connection,totalQuery);
         resultJsonObject.put("params", params);
         resultJsonObject.put("totalRecords", totalQueryResult.getJSONObject(0).getInt("totalRecords"));
