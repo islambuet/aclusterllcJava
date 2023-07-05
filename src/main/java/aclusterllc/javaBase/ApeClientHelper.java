@@ -787,5 +787,34 @@ public class ApeClientHelper {
             ConfigurationHelper.countersCurrentValue.put(machine_id+"_"+(i+1),(int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 4+i*4, 8+i*4)));
         }
     }
+    public static void handleMessage_57(Connection connection, JSONObject clientInfo, byte[] dataBytes){
+        int machine_id=clientInfo.getInt("machine_id");
+        String query = "UPDATE statistics_oee SET";
+        query+=String.format(" current_state= %d,", (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 0, 4)));
+        query+=String.format(" average_tput= %d,", (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 4, 8)));
+        query+=String.format(" max_3min_tput= %d,", (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 8, 12)));
+        query+=String.format(" successful_divert_packages= %d,", (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 12, 16)));
+        query+=String.format(" packages_inducted= %d,", (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 16, 20)));
+        query+=String.format(" tot_sec_since_reset= %d,", (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 20, 24)));
+        query+=String.format(" tot_sec_estop= %d,", (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 24, 28)));
+        query+=String.format(" tot_sec_fault= %d,", (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 28, 32)));
+        query+=String.format(" tot_sec_blocked= %d,", (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 32, 36)));
+        query+=String.format(" tot_sec_idle= %d,", (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 36, 40)));
+        query+=String.format(" tot_sec_init= %d,", (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 40, 44)));
+        query+=String.format(" tot_sec_run= %d,", (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 44, 48)));
+        query+=String.format(" tot_sec_starved= %d,", (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 48, 52)));
+        query+=String.format(" tot_sec_held= %d,", (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 52, 56)));
+        query+=String.format(" tot_sec_unconstrained= %d,", (int) CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 56, 60)));
+        query+=String.format(" last_record= %d,", dataBytes[60]);
+        query+=" updated_at=NOW()";
+        query+=String.format(" WHERE machine_id=%d ORDER BY id DESC LIMIT 1;", machine_id);
+        try {
+            DatabaseHelper.runMultipleQuery(connection,query);
+        }
+        catch (SQLException e) {
+            logger.error(CommonHelper.getStackTraceString(e));
+        }
+
+    }
 
 }

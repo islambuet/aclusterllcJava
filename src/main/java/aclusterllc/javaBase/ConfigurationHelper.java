@@ -83,6 +83,8 @@ public class ConfigurationHelper {
         APE_MESSAGE_ID_NAME.put("54", "Param Value Message");
         APE_MESSAGE_ID_NAME.put("55", "RequestParams Message");
         APE_MESSAGE_ID_NAME.put("56", "Counter Message");
+        APE_MESSAGE_ID_NAME.put("57", "OEEData Message");
+        APE_MESSAGE_ID_NAME.put("58", "Shutdown Message");
         APE_MESSAGE_ID_NAME.put("101", "Request Inputs State Message");
         APE_MESSAGE_ID_NAME.put("102", "Request Errors Message");
         APE_MESSAGE_ID_NAME.put("103", "Request Jams Message");
@@ -176,6 +178,7 @@ public class ConfigurationHelper {
                     "INSERT IGNORE INTO statistics_minutely (machine_id) SELECT DISTINCT machine_id FROM machines WHERE NOT EXISTS (SELECT * FROM statistics_minutely);" +
                     "INSERT IGNORE INTO statistics_hourly (machine_id) SELECT DISTINCT machine_id FROM machines WHERE NOT EXISTS (SELECT * FROM statistics_hourly);" +
                     "INSERT IGNORE INTO statistics_counter (machine_id) SELECT DISTINCT machine_id FROM machines WHERE NOT EXISTS (SELECT * FROM statistics_counter);" +
+                    "INSERT IGNORE INTO statistics_oee (machine_id) SELECT DISTINCT machine_id FROM machines WHERE NOT EXISTS (SELECT * FROM statistics_oee);" +
                     "INSERT IGNORE INTO statistics_bins (machine_id,bin_id) SELECT DISTINCT machine_id,bin_id FROM bins WHERE NOT EXISTS (SELECT * FROM statistics_bins);" +
                     "INSERT IGNORE INTO statistics_bins_counter (machine_id,bin_id) SELECT DISTINCT machine_id,bin_id FROM bins WHERE NOT EXISTS (SELECT * FROM statistics_bins_counter);" +
                     "INSERT IGNORE INTO statistics_bins_hourly (machine_id,bin_id) SELECT DISTINCT machine_id,bin_id FROM bins WHERE NOT EXISTS (SELECT * FROM statistics_bins_hourly);";

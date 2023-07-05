@@ -330,6 +330,9 @@ public class ApeClient implements Runnable, HmiMessageObserver {
 					case 56:
 						ApeClientHelper.handleMessage_56(connection,clientInfo,dataBytes);
 						break;
+					case 57:
+						ApeClientHelper.handleMessage_57(connection,clientInfo,dataBytes);
+						break;
 				}
 				//Client >> Server
 				//MSG_ID = 115
@@ -344,8 +347,6 @@ public class ApeClient implements Runnable, HmiMessageObserver {
 			catch (Exception ex){
 				logger.error("[MESSAGE_PROCESS]"+CommonHelper.getStackTraceString(ex));
 			}
-
-
 		}
 		//MSG_LENGTH = 8
 		else {
@@ -354,6 +355,17 @@ public class ApeClient implements Runnable, HmiMessageObserver {
 					break;
 				case 30:
 					pingCounter=0;
+					break;
+				case 58:
+					Runtime r = Runtime.getRuntime();
+					try
+					{
+						logger.info("Shutting down after 2 seconds.");
+						r.exec("shutdown -s -t 2");
+					}
+					catch (IOException ex) {
+						logger.error(CommonHelper.getStackTraceString(ex));
+					}
 					break;
 				default:
 					// code block
@@ -399,8 +411,10 @@ public class ApeClient implements Runnable, HmiMessageObserver {
 							int command = Integer.parseInt(params.get("command").toString());
 							int parameter1 = Integer.parseInt(params.get("parameter1").toString());
 							if(device_id==86 && command ==0){
+								//FOR all machine or current machine
 								Connection connection=ConfigurationHelper.getConnection();
 								String query= format("INSERT INTO statistics_counter (`machine_id`) VALUES (%d);",machine_id);
+								query+= format("INSERT INTO statistics_oee (`machine_id`) VALUES (%d);",machine_id);
 								query+=format("INSERT INTO statistics_bins_counter (machine_id,bin_id) SELECT DISTINCT machine_id,bin_id FROM bins WHERE machine_id=%d;",machine_id);
 								DatabaseHelper.runMultipleQuery(connection,query);
 								connection.close();
