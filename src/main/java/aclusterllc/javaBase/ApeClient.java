@@ -54,7 +54,6 @@ public class ApeClient implements Runnable, HmiMessageObserver {
 				try {
 					Thread.sleep(secToWait * 1000);
 					secToWait = 180;
-					System.out.println(LocalDateTime.now());
 					if (connectedWithApe)
 					{
 						Connection connection=ConfigurationHelper.getConnection();
@@ -69,7 +68,6 @@ public class ApeClient implements Runnable, HmiMessageObserver {
 						}
 						byte[] messageBytes = new byte[]{0, 0, 0, 126, 0, 0, 0, 12,(byte) (maxtput >> 24), (byte) (maxtput >> 16), (byte) (maxtput >> 8), (byte) (maxtput)};
 						sendBytes(messageBytes);
-						System.out.println(maxtput);
 						connection.close();
 					}
 				}
@@ -442,9 +440,28 @@ public class ApeClient implements Runnable, HmiMessageObserver {
 			if (request.equals("forward_ape_message")) {
 				if(machine_id==clientInfo.getInt("machine_id")){
 					int message_id = Integer.parseInt(params.get("message_id").toString());
+					byte[] messageBytes;
 					switch(message_id) {
-						case 123:
-						{
+						case 115: {
+							int param_id = Integer.parseInt(params.get("param_id").toString());
+							int value = Integer.parseInt(params.get("value").toString());
+							messageBytes = new byte[]{
+									0, 0, 0, 115, 0, 0, 0, 20, 0, 0, 0, 0,
+									(byte) (param_id >> 24), (byte) (param_id >> 16), (byte) (param_id >> 8), (byte) (param_id),
+									(byte) (value >> 24), (byte) (value >> 16), (byte) (value >> 8), (byte) (value)
+							};
+							sendBytes(messageBytes);
+							break;
+						}
+						case 120:{
+							int mode = Integer.parseInt(params.get("mode").toString());
+							messageBytes = new byte[]{
+									0, 0, 0, 120, 0, 0, 0, 9, (byte) mode
+							};
+							sendBytes(messageBytes);
+							break;
+						}
+						case 123:{
 							int device_id = Integer.parseInt(params.get("device_id").toString());
 							int command = Integer.parseInt(params.get("command").toString());
 							int parameter1 = Integer.parseInt(params.get("parameter1").toString());
@@ -457,7 +474,7 @@ public class ApeClient implements Runnable, HmiMessageObserver {
 								DatabaseHelper.runMultipleQuery(connection,query);
 								connection.close();
 							}
-							byte[] messageBytes= new byte[]{
+							messageBytes= new byte[]{
 									0, 0, 0, 123, 0, 0, 0, 20,
 									(byte) (device_id >> 24),(byte) (device_id >> 16),(byte) (device_id >> 8),(byte) (device_id),
 									(byte) (command >> 24),(byte) (command >> 16),(byte) (command >> 8),(byte) (command),
@@ -466,13 +483,7 @@ public class ApeClient implements Runnable, HmiMessageObserver {
 							sendBytes(messageBytes);
 							break;
 						}
-						case 120:
-							int mode = Integer.parseInt(params.get("mode").toString());
-							byte[] messageBytes= new byte[]{
-									0, 0, 0, 120, 0, 0, 0, 9,(byte)mode
-							};
-							sendBytes(messageBytes);
-							break;
+
 
 					}
 				}
