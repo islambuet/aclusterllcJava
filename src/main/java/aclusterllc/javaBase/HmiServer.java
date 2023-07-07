@@ -219,6 +219,10 @@ public class HmiServer implements Runnable {
                                 responseData.put(requestFunctionName,DatabaseHelper.getActiveAlarms(connection,machine_id));
                                 break;
                             }
+                            case "counters_current_value": {
+                                responseData.put(requestFunctionName,ConfigurationHelper.countersCurrentValue);
+                                break;
+                            }
                             case "disconnected_device_counter": {
                                 responseData.put(requestFunctionName,DatabaseHelper.getDisconnectedDeviceCounter(connection,machine_id));
                                 break;
