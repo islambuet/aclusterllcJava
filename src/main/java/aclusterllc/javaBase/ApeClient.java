@@ -1,5 +1,6 @@
 package aclusterllc.javaBase;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +12,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.sql.Connection;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static java.lang.String.format;
@@ -40,7 +42,43 @@ public class ApeClient implements Runnable, HmiMessageObserver {
 		this.apeClientMessageQueueHandler=apeClientMessageQueueHandler;
 		worker = new Thread(this);
 		//pingThread = new Thread(this::runPingThread);
-
+		start3minTpuThread();
+	}
+	private void start3minTpuThread() {
+		//send a test signal
+		// You may or may not want to stop the thread here
+		new Thread(() -> {
+			LocalDateTime now = LocalDateTime.now();
+			int secToWait=181-(((now.getMinute())%3)*60+now.getSecond());
+			while (true){
+				try {
+					Thread.sleep(secToWait * 1000);
+					secToWait = 180;
+					System.out.println(LocalDateTime.now());
+					if (connectedWithApe)
+					{
+						Connection connection=ConfigurationHelper.getConnection();
+						String query=format("SELECT MAX(total_read) max_total_read FROM statistics WHERE machine_id=%d AND created_at>= (SELECT created_at FROM statistics_counter ORDER BY id DESC LIMIT 1);", clientInfo.getInt("machine_id"));
+						JSONArray queryResult=DatabaseHelper.getSelectQueryResults(connection,query);
+						int maxtput=0;
+						if(queryResult.length()>0){
+							JSONObject maxResult= queryResult.getJSONObject(0);
+							if(maxResult.has("max_total_read")){
+								maxtput=maxResult.getInt("max_total_read")*20;
+							}
+						}
+						byte[] messageBytes = new byte[]{0, 0, 0, 126, 0, 0, 0, 12,(byte) (maxtput >> 24), (byte) (maxtput >> 16), (byte) (maxtput >> 8), (byte) (maxtput)};
+						sendBytes(messageBytes);
+						System.out.println(maxtput);
+						connection.close();
+					}
+				}
+				catch (Exception ex) {
+					logger.error("Max Tput sender Thread Error");
+					logger.error(CommonHelper.getStackTraceString(ex));
+				}
+			}
+		}).start();
 	}
 	void startReconnectThread(){
 		new Thread(() -> {
