@@ -223,6 +223,10 @@ public class HmiServer implements Runnable {
                                 responseData.put(requestFunctionName,ConfigurationHelper.countersCurrentValue);
                                 break;
                             }
+                            case "device_states": {
+                                responseData.put(requestFunctionName,DatabaseHelper.getDeviceStates(connection,machine_id));
+                                break;
+                            }
                             case "disconnected_device_counter": {
                                 responseData.put(requestFunctionName,DatabaseHelper.getDisconnectedDeviceCounter(connection,machine_id));
                                 break;
@@ -233,6 +237,10 @@ public class HmiServer implements Runnable {
                             }
                             case "machine_mode": {
                                 responseData.put(requestFunctionName,DatabaseHelper.getMachineMode(connection,machine_id));
+                                break;
+                            }
+                            case "motors_current_speed": {
+                                responseData.put(requestFunctionName,ConfigurationHelper.motorsCurrentSpeed);
                                 break;
                             }
                             case "output_states": {
@@ -273,6 +281,10 @@ public class HmiServer implements Runnable {
                             }
                             case "statistics_bins_hourly": {
                                 responseData.put(requestFunctionName,DatabaseHelper.getStatisticsData(connection,machine_id,"statistics_bins_hourly",requestFunction.getJSONObject("params")));
+                                break;
+                            }
+                            case "statistics_oee": {
+                                responseData.put(requestFunctionName,DatabaseHelper.getStatisticsData(connection,machine_id,"statistics_oee",requestFunction.getJSONObject("params")));
                                 break;
                             }
                         }
