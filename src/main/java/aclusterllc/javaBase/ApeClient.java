@@ -223,6 +223,7 @@ public class ApeClient implements Runnable, HmiMessageObserver {
 		catch (IOException e) {
 			logger.error(e.toString());
 		}
+		ConfigurationHelper.apeClientConnectionStatus.put(clientInfo.getInt("machine_id"), 0);
 		connectedWithApe=false;
 		if(!reconnectThreadRunning){
 			reconnectThreadRunning=true;
