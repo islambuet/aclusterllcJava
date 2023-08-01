@@ -119,7 +119,7 @@ public class ApeClientHelper {
             else{
                 if((jsonActiveAlarms.has(machineId+"_"+(i+1)))){
                     JSONObject item= (JSONObject) jsonActiveAlarms.get(machineId+"_"+(i+1));
-                    query+= format("INSERT INTO active_alarms_history (`machine_id`, `alarm_id`,`alarm_type`,`date_active`) VALUES (%d,%d,%d,'%s');"
+                    query+= format("INSERT INTO alarms_history (`machine_id`, `alarm_id`,`alarm_type`,`date_active`) VALUES (%d,%d,%d,'%s');"
                             ,machineId,(i+1),alarm_type,item.get("date_active"));
                     query+=format("DELETE FROM active_alarms where id=%d;",item.getInt("id"));
                 }

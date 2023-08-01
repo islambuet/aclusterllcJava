@@ -97,10 +97,10 @@ public class DatabaseHelper {
         String query = String.format("SELECT *,UNIX_TIMESTAMP(date_active) AS date_active_timestamp FROM active_alarms WHERE machine_id=%d ORDER BY id DESC", machineId);
         return  getSelectQueryResults(connection,query);
     }
-    public static JSONObject getActiveAlarmsHistory(Connection connection,int machineId,JSONObject params){
+    public static JSONObject getAlarmsHistory(Connection connection,int machineId,JSONObject params){
         JSONObject resultJsonObject = new JSONObject();
-        String query = "SELECT *,UNIX_TIMESTAMP(date_active) AS date_active_timestamp,UNIX_TIMESTAMP(date_inactive) AS date_inactive_timestamp FROM active_alarms_history";
-        String totalQuery = "SELECT COUNT(id) as totalRecords FROM active_alarms_history";
+        String query = "SELECT *,UNIX_TIMESTAMP(date_active) AS date_active_timestamp,UNIX_TIMESTAMP(date_inactive) AS date_inactive_timestamp FROM alarms_history";
+        String totalQuery = "SELECT COUNT(id) as totalRecords FROM alarms_history";
 
         query+=String.format(" WHERE machine_id=%d",machineId);
         totalQuery+=String.format(" WHERE machine_id=%d",machineId);
@@ -136,6 +136,25 @@ public class DatabaseHelper {
         resultJsonObject.put("records", getSelectQueryResults(connection,query));
         return resultJsonObject;
 
+    }
+    public static JSONObject getAlarmsHitList(Connection connection,int machineId,JSONObject params){
+        JSONObject resultJsonObject = new JSONObject();
+        String query ="SELECT *,COUNT(id) AS no_of_occurrences," +
+                "MAX(UNIX_TIMESTAMP(date_active)) AS date_active_timestamp," +
+                "MAX(UNIX_TIMESTAMP(date_inactive)) AS date_inactive_timestamp " +
+                "FROM alarms_history";
+
+        query+=String.format(" WHERE machine_id=%d",machineId);
+        if(params.has("to_timestamp")){
+            query+=String.format(" AND UNIX_TIMESTAMP(date_active)<=%d",params.getInt("to_timestamp"));
+        }
+        if(params.has("from_timestamp")){
+            query+=String.format(" AND UNIX_TIMESTAMP(date_active)>=%d",params.getInt("from_timestamp"));
+        }
+        query+=" GROUP BY machine_id,alarm_id,alarm_type;";
+        resultJsonObject.put("params", params);
+        resultJsonObject.put("records", getSelectQueryResults(connection,query,new String[] { "machine_id", "alarm_id", "alarm_type"}));
+        return resultJsonObject;
     }
     public static JSONObject getBinStates(Connection connection,int machineId){
         String query = String.format("SELECT * FROM bin_states WHERE machine_id=%d", machineId);
