@@ -97,6 +97,46 @@ public class DatabaseHelper {
         String query = String.format("SELECT *,UNIX_TIMESTAMP(date_active) AS date_active_timestamp FROM active_alarms WHERE machine_id=%d ORDER BY id DESC", machineId);
         return  getSelectQueryResults(connection,query);
     }
+    public static JSONObject getActiveAlarmsHistory(Connection connection,int machineId,JSONObject params){
+        JSONObject resultJsonObject = new JSONObject();
+        String query = "SELECT *,UNIX_TIMESTAMP(date_active) AS date_active_timestamp,UNIX_TIMESTAMP(date_inactive) AS date_inactive_timestamp FROM active_alarms_history";
+        String totalQuery = "SELECT COUNT(id) as totalRecords FROM active_alarms_history";
+
+        query+=String.format(" WHERE machine_id=%d",machineId);
+        totalQuery+=String.format(" WHERE machine_id=%d",machineId);
+        if(params.has("to_timestamp")){
+            query+=String.format(" AND UNIX_TIMESTAMP(date_active)<=%d",params.getInt("to_timestamp"));
+            totalQuery+=String.format(" AND UNIX_TIMESTAMP(date_active)<=%d",params.getInt("to_timestamp"));
+        }
+        if(params.has("from_timestamp")){
+            query+=String.format(" AND UNIX_TIMESTAMP(date_active)>=%d",params.getInt("from_timestamp"));
+            totalQuery+=String.format(" AND UNIX_TIMESTAMP(date_active)>=%d",params.getInt("from_timestamp"));
+        }
+        query+=" ORDER BY id DESC";
+        if(params.has("per_page")){
+            int per_page=params.getInt("per_page");
+            if(per_page>0){
+                int page=0;
+                if(params.has("page")){
+                    page=params.getInt("page");
+                }
+                if(page>0) {
+                    query += String.format(" LIMIT %d OFFSET %d", per_page, (page - 1) * per_page);
+                }
+                else{
+                    query+=String.format(" LIMIT %d",per_page);
+                }
+            }
+        }
+        query+=";";
+        totalQuery+=";";
+        JSONArray totalQueryResult=getSelectQueryResults(connection,totalQuery);
+        resultJsonObject.put("params", params);
+        resultJsonObject.put("totalRecords", totalQueryResult.getJSONObject(0).getInt("totalRecords"));
+        resultJsonObject.put("records", getSelectQueryResults(connection,query));
+        return resultJsonObject;
+
+    }
     public static JSONObject getBinStates(Connection connection,int machineId){
         String query = String.format("SELECT * FROM bin_states WHERE machine_id=%d", machineId);
         return getSelectQueryResults(connection,query,new String[] { "machine_id", "bin_id"});
@@ -181,8 +221,6 @@ public class DatabaseHelper {
                 totalQuery+=String.format(" AND barcode1_string LIKE \"%%%s%%\"",search_barcode);
             }
         }
-        System.out.println(params);
-        //
         query+=" ORDER BY id DESC";
         if(params.has("per_page")){
             int per_page=params.getInt("per_page");
@@ -200,9 +238,7 @@ public class DatabaseHelper {
             }
         }
         query+=";";
-        System.out.println(query);
         totalQuery+=";";
-        System.out.println(totalQuery);
         JSONArray totalQueryResult=getSelectQueryResults(connection,totalQuery);
         resultJsonObject.put("params", params);
         resultJsonObject.put("totalRecords", totalQueryResult.getJSONObject(0).getInt("totalRecords"));
