@@ -29,7 +29,7 @@ public class HmiServer implements Runnable {
     private Thread worker;
     Selector selector;
     ServerSocketChannel serverSocketChannel;
-    ByteBuffer buffer = ByteBuffer.allocate(10240000);
+    ByteBuffer bufferForReadData = ByteBuffer.allocate(10240000);
 
     ConcurrentHashMap<SocketChannel, ConnectedHmiClient> connectedHmiClientList = new ConcurrentHashMap<>();
     Logger logger = LoggerFactory.getLogger(HmiServer.class);
@@ -88,10 +88,10 @@ public class HmiServer implements Runnable {
     }
     public void readReceivedDataFromConnectedHmiClient(SelectionKey key) {
         SocketChannel socketChannel = (SocketChannel) key.channel();
-        buffer.clear();
+        bufferForReadData.clear();
         int numRead = 0;
         try {
-            numRead = socketChannel.read(buffer);
+            numRead = socketChannel.read(bufferForReadData);
         } catch (IOException e) {
             logger.error(e.toString());
             disconnectConnectedHmiClient(socketChannel);
@@ -103,9 +103,9 @@ public class HmiServer implements Runnable {
             return;
         }
 
-        byte[] b = new byte[buffer.position()];
-        buffer.flip();
-        buffer.get(b);
+        byte[] b = new byte[bufferForReadData.position()];
+        bufferForReadData.flip();
+        bufferForReadData.get(b);
         ConnectedHmiClient connectedHmiClient=connectedHmiClientList.get(socketChannel);
         if(connectedHmiClient==null){
             logger.error("[DATA_PROCESS] ConnectedHmiClient Not found.");
