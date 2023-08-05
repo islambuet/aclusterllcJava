@@ -131,6 +131,9 @@ public class ConfigurationHelper {
             query = "SELECT * FROM bins";
             dbBasicInfo.put("bins",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "bin_id"}));
 
+            query = "SELECT * FROM bin_state_colors ORDER BY ordering DESC";
+            dbBasicInfo.put("bin_state_colors",DatabaseHelper.getSelectQueryResults(connection,query));
+
             query = "SELECT * FROM boards";
             dbBasicInfo.put("boards",DatabaseHelper.getSelectQueryResults(connection,query,new String[] { "machine_id", "board_id"}));
 
