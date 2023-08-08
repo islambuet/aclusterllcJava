@@ -313,14 +313,15 @@ public class ApeClientHelper {
                      length, width, height, weight, reject_code, productInfo.getInt("id"));
             try {
                 DatabaseHelper.runMultipleQuery(connection,query);
+                logger.info("[PRODUCT][20] Product Updated. MailId=" + mailId);
             }
             catch (SQLException e) {
-                logger.error(CommonHelper.getStackTraceString(e));
+                logger.error("[PRODUCT][20] "+CommonHelper.getStackTraceString(e));
                 productInfo=new JSONObject();//removing info for unSuccess
             }
         }
         else{
-            logger.warn("[PRODUCT][20] Product not found found. MailId="+mailId);
+            logger.error("[PRODUCT][20] Product not found found. MailId="+mailId);
         }
         return productInfo;
 
@@ -413,8 +414,8 @@ public class ApeClientHelper {
             stmt.execute(query);
             connection.commit();
             connection.setAutoCommit(true);
-
             stmt.close();
+            logger.info("[PRODUCT][21] Product Updated. MailId=" + mailId);
         }
         catch (Exception ex){
             logger.error("[PRODUCT][21] "+CommonHelper.getStackTraceString(ex));
@@ -537,6 +538,7 @@ public class ApeClientHelper {
             logger.error(CommonHelper.getStackTraceString(e));
             return  new JSONObject();
         }
+        logger.info("[PRODUCT][22] Product Updated. MailId=" + mail_id);
 
         return productInfo;
     }
@@ -607,6 +609,7 @@ public class ApeClientHelper {
         long mailId = CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 0, 4));
         long sensorId = CommonHelper.bytesToLong(Arrays.copyOfRange(dataBytes, 4, 8));
         int sensorStatus=dataBytes[8];
+        logger.info("[PRODUCT][44] sensorId= "+sensorId+". sensorStatus="+sensorStatus+". MailId="+mailId);
         if((sensorId == 1) && (sensorStatus == 1)) {
             String query="";
             String queryOldProduct=format("SELECT * FROM products WHERE machine_id=%d AND mail_id=%d;", machineId, mailId);
@@ -629,6 +632,7 @@ public class ApeClientHelper {
                 if(rs.next())
                 {
                     productInfo.put("id",rs.getLong(1));
+                    logger.info("[PRODUCT][44] Inserted New Product MailId="+mailId+" ProductId:"+rs.getLong(1));
                 }
                 connection.commit();
                 connection.setAutoCommit(true);
@@ -638,9 +642,6 @@ public class ApeClientHelper {
             catch (Exception ex){
                 logger.error("[PRODUCT][44] "+CommonHelper.getStackTraceString(ex));
             }
-        }
-        else{
-            logger.info("[PRODUCT][44] Product not inserted. sensorId="+sensorId+". sensorStatus="+sensorStatus+". MailId="+mailId);
         }
         productInfo.put("mail_id",mailId);
         return productInfo;
