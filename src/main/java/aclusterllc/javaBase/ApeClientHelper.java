@@ -43,7 +43,7 @@ public class ApeClientHelper {
             if(inputsCurrentState.has(machineId+"_"+(i+1))){
                 JSONObject inputState= (JSONObject) inputsCurrentState.get(machineId+"_"+(i+1));
                 if(inputState.getInt("state")!=bits[i]){
-                    query+= format("UPDATE input_states SET `state`=%d,`updated_at`=now() WHERE id=%d;",bits[i],inputState.getInt("id"));
+                    query+= format("UPDATE input_states SET `state`=%d,`updated_at`=now() WHERE id=%d;",bits[i],inputState.getLong("id"));
                     insertHistory=true;
                 }
             }
@@ -75,7 +75,7 @@ public class ApeClientHelper {
             if (rs.next())
             {
                 if(rs.getInt("state")!=state){
-                    String query2= format("UPDATE input_states SET `state`=%d,`updated_at`=now() WHERE id=%d;",state,rs.getInt("id"));
+                    String query2= format("UPDATE input_states SET `state`=%d,`updated_at`=now() WHERE id=%d;",state,rs.getLong("id"));
                     if((inputsInfo.has(machineId+"_"+inputId)) && (((JSONObject)inputsInfo.get(machineId+"_"+inputId)).getInt("enable_history")==1)){
                         query2+= format("INSERT INTO input_states_history (`machine_id`, `input_id`,`state`) VALUES (%d,%d,%d);",machineId,inputId,state);
                     }
@@ -121,7 +121,7 @@ public class ApeClientHelper {
                     JSONObject item= (JSONObject) jsonActiveAlarms.get(machineId+"_"+(i+1));
                     query+= format("INSERT INTO alarms_history (`machine_id`, `alarm_id`,`alarm_type`,`date_active`) VALUES (%d,%d,%d,'%s');"
                             ,machineId,(i+1),alarm_type,item.get("date_active"));
-                    query+=format("DELETE FROM active_alarms where id=%d;",item.getInt("id"));
+                    query+=format("DELETE FROM active_alarms where id=%d;",item.getLong("id"));
                 }
 
             }
@@ -162,7 +162,7 @@ public class ApeClientHelper {
                 if(binStates.has(machineId+"_"+bin_id)){
                     JSONObject binState= (JSONObject) binStates.get(machineId+"_"+bin_id);
                     if(binState.getInt(columName)!=bits[i]){
-                        query+=format("UPDATE bin_states SET `%s`='%s', `updated_at`=now()  WHERE `id`=%d;",columName,bits[i],binState.getInt("id"));
+                        query+=format("UPDATE bin_states SET `%s`='%s', `updated_at`=now()  WHERE `id`=%d;",columName,bits[i],binState.getLong("id"));
                         String unChangedQuery="";
                         for(String key:binState.keySet()){
                             if(!(key.equals("id")|| key.equals("updated_at")|| key.equals(columName)))
@@ -215,7 +215,7 @@ public class ApeClientHelper {
             if(binStates.has(machineId+"_"+bin_id)){
                 JSONObject binState= (JSONObject) binStates.get(machineId+"_"+bin_id);
                 if(binState.getInt(columName)!=state){
-                    query+=format("UPDATE bin_states SET `%s`='%s', `updated_at`=now()  WHERE `id`=%d;",columName,state,binState.getInt("id"));
+                    query+=format("UPDATE bin_states SET `%s`='%s', `updated_at`=now()  WHERE `id`=%d;",columName,state,binState.getLong("id"));
                     String unChangedQuery="";
                     for(String key:binState.keySet()){
                         if(!(key.equals("id")|| key.equals("updated_at")|| key.equals(columName)))
@@ -249,7 +249,7 @@ public class ApeClientHelper {
             if(deviceStates.has(machineId+"_"+(i+1))){
                 JSONObject deviceState= (JSONObject) deviceStates.get(machineId+"_"+(i+1));
                 if(deviceState.getInt("state")!=bits[i]){
-                    query+= format("UPDATE device_states SET `state`=%d,`updated_at`=now() WHERE id=%d;",bits[i],deviceState.getInt("id"));
+                    query+= format("UPDATE device_states SET `state`=%d,`updated_at`=now() WHERE id=%d;",bits[i],deviceState.getLong("id"));
                     query+= format("INSERT INTO device_states_history (`machine_id`, `device_id`,`state`) VALUES (%d,%d,%d);",machineId,(i+1),bits[i]);
                 }
             }
@@ -276,7 +276,7 @@ public class ApeClientHelper {
         if(deviceStates.has(machineId+"_"+device_id)){
             JSONObject deviceState= (JSONObject) deviceStates.get(machineId+"_"+device_id);
             if(deviceState.getInt("state")!=state){
-                query+=format("UPDATE device_states SET `state`='%d', `updated_at`=now()  WHERE `id`=%d;",state,deviceState.getInt("id"));
+                query+=format("UPDATE device_states SET `state`='%d', `updated_at`=now()  WHERE `id`=%d;",state,deviceState.getLong("id"));
                 query+=format("INSERT INTO device_states_history (`machine_id`, `device_id`,`state`) VALUES (%d,%d,%d);",machineId,device_id,state);
             }
         }
@@ -310,7 +310,7 @@ public class ApeClientHelper {
             productInfo.put("weight",length);
             productInfo.put("reject_code",reject_code);
             String query =format("UPDATE products SET length=%d, width=%d, height=%d, weight=%d, reject_code=%d, dimension_at=NOW() WHERE id=%d;",
-                     length, width, height, weight, reject_code, productInfo.getInt("id"));
+                     length, width, height, weight, reject_code, productInfo.getLong("id"));
             try {
                 DatabaseHelper.runMultipleQuery(connection,query);
                 logger.info("[PRODUCT][20] Product Updated. MailId=" + mailId);
@@ -385,7 +385,7 @@ public class ApeClientHelper {
 
         if(queryCheckProductResult.length()>0){
             productInfo=queryCheckProductResult.getJSONObject(0);
-            query+=format("UPDATE products SET %s`number_of_results`='%s', `barcode_at`=now()  WHERE `id`=%d;",queryBarcode,number_of_results,productInfo.getInt("id"));
+            query+=format("UPDATE products SET %s`number_of_results`='%s', `barcode_at`=now()  WHERE `id`=%d;",queryBarcode,number_of_results,productInfo.getLong("id"));
         }
         else{
             productInfo.put("mail_id",mailId);
@@ -479,7 +479,7 @@ public class ApeClientHelper {
                 valueFromProductsQuery+=format("`%s`='%s',",key.equals("id")?"product_id":key,productInfo.get(key));
         }
         query= format("INSERT INTO products_history SET %s `confirmed_at`=now();",valueFromProductsQuery);
-        query+=format("DELETE FROM products WHERE id=%d;", productInfo.getInt("id"));
+        query+=format("DELETE FROM products WHERE id=%d;", productInfo.getLong("id"));
 
         //process short codes
         JSONObject destBin=null;
@@ -556,7 +556,7 @@ public class ApeClientHelper {
                 if(conveyorStates.has(machineId+"_"+conveyor_id)){
                     JSONObject conveyorState= (JSONObject) conveyorStates.get(machineId+"_"+conveyor_id);
                     if(conveyorState.getInt("state")!=stateDataBytes[i]){
-                        query+=format("UPDATE conveyor_states SET `state`='%s', `updated_at`=now()  WHERE `id`=%d;",stateDataBytes[i],conveyorState.getInt("id"));
+                        query+=format("UPDATE conveyor_states SET `state`='%s', `updated_at`=now()  WHERE `id`=%d;",stateDataBytes[i],conveyorState.getLong("id"));
                         query+= format("INSERT INTO conveyor_states_history (`machine_id`, `conveyor_id`,`state`) VALUES (%d,%d,%d);",machineId,conveyor_id,stateDataBytes[i]);
                     }
                 }
@@ -584,7 +584,7 @@ public class ApeClientHelper {
             if(conveyorStates.has(machineId+"_"+conveyor_id)){
                 JSONObject conveyorState= (JSONObject) conveyorStates.get(machineId+"_"+conveyor_id);
                 if(conveyorState.getInt("state")!=state){
-                    query+=format("UPDATE conveyor_states SET `state`='%s', `updated_at`=now()  WHERE `id`=%d;",state,conveyorState.getInt("id"));
+                    query+=format("UPDATE conveyor_states SET `state`='%s', `updated_at`=now()  WHERE `id`=%d;",state,conveyorState.getLong("id"));
                     query+= format("INSERT INTO conveyor_states_history (`machine_id`, `conveyor_id`,`state`) VALUES (%d,%d,%d);",machineId,conveyor_id,state);
                 }
             }
@@ -615,7 +615,7 @@ public class ApeClientHelper {
             String queryOldProduct=format("SELECT * FROM products WHERE machine_id=%d AND mail_id=%d;", machineId, mailId);
             JSONArray previousProductInfo=DatabaseHelper.getSelectQueryResults(connection,queryOldProduct);
             if(previousProductInfo.length()>0){
-                int oldProductId=previousProductInfo.getJSONObject(0).getInt("id");
+                long oldProductId=previousProductInfo.getJSONObject(0).getLong("id");
                 logger.info("[PRODUCT][44] Duplicate Product found. MailId="+mailId+" productId="+oldProductId);
                 query+=format("INSERT INTO products_overwritten SELECT * FROM products WHERE id=%d;", oldProductId);
                 query+=format("DELETE FROM products WHERE id=%d;", oldProductId);
@@ -661,7 +661,7 @@ public class ApeClientHelper {
                 if(inductStates.has(machineId+"_"+induct_id)){
                     JSONObject inductState= (JSONObject) inductStates.get(machineId+"_"+induct_id);
                     if(inductState.getInt("state")!=stateDataBytes[i]){
-                        query+=format("UPDATE induct_states SET `state`='%s', `updated_at`=now()  WHERE `id`=%d;",stateDataBytes[i],inductState.getInt("id"));
+                        query+=format("UPDATE induct_states SET `state`='%s', `updated_at`=now()  WHERE `id`=%d;",stateDataBytes[i],inductState.getLong("id"));
                         query+= format("INSERT INTO induct_states_history (`machine_id`, `induct_id`,`state`) VALUES (%d,%d,%d);",machineId,induct_id,stateDataBytes[i]);
                     }
                 }
@@ -689,7 +689,7 @@ public class ApeClientHelper {
             if(inductStates.has(machineId+"_"+induct_id)){
                 JSONObject inductState= (JSONObject) inductStates.get(machineId+"_"+induct_id);
                 if(inductState.getInt("state")!=state){
-                    query+=format("UPDATE induct_states SET `state`='%s', `updated_at`=now()  WHERE `id`=%d;",state,inductState.getInt("id"));
+                    query+=format("UPDATE induct_states SET `state`='%s', `updated_at`=now()  WHERE `id`=%d;",state,inductState.getLong("id"));
                     query+= format("INSERT INTO induct_states_history (`machine_id`, `induct_id`,`state`) VALUES (%d,%d,%d);",machineId,induct_id,state);
                 }
             }
