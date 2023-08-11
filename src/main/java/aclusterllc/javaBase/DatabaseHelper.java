@@ -166,12 +166,7 @@ public class DatabaseHelper {
     }
     public static JSONObject getDeviceStates(Connection connection,int machineId){
         String query = String.format("SELECT * FROM device_states WHERE machine_id=%d", machineId);
-        JSONObject queryResult=getSelectQueryResults(connection,query,new String[] { "machine_id", "device_id"});
-        //for main plc manually set status
-        JSONObject plc= (JSONObject) queryResult.get(machineId+"_2");
-        plc.put("state",ConfigurationHelper.apeClientConnectionStatus.get(machineId));
-        queryResult.put(machineId+"_2",plc);
-        return queryResult;
+        return getSelectQueryResults(connection,query,new String[] { "machine_id", "device_id"});
     }
     public static int getDisconnectedDeviceCounter(Connection connection,int machineId){
         int totalDisconnected=0;

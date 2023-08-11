@@ -240,7 +240,14 @@ public class HmiServer implements Runnable {
                                 break;
                             }
                             case "device_states": {
-                                responseData.put(requestFunctionName,DatabaseHelper.getDeviceStates(connection,machine_id));
+                                JSONObject deviceStates=DatabaseHelper.getDeviceStates(connection,machine_id);
+                                //for main plc manually set status
+                                if(deviceStates.has(machine_id+"_2")){
+                                    JSONObject plc= (JSONObject) deviceStates.get(machine_id+"_2");
+                                    plc.put("state",ConfigurationHelper.apeClientConnectionStatus.get(machine_id));
+                                    deviceStates.put(machine_id+"_2",plc);
+                                }
+                                responseData.put(requestFunctionName,deviceStates);
                                 break;
                             }
                             case "disconnected_device_counter": {
